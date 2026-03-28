@@ -1,5 +1,11 @@
+
+from flask import Blueprint, render_template # e outros imports que você usa
+
+# ESTA LINHA ABAIXO É A QUE ESTÁ FALTANDO:
+relatorios_bp = Blueprint('relatorios', __name__)
+
 @relatorios_bp.route('/adubacao/<int:rec_id>/pdf')
-def pdf_adubacao(rec_id):
+def gerar_pdf(rec_id):
     db = get_db()
     rec = db.execute("""
         SELECT r.*, t.nome as talhao_nome, t.area_ha
