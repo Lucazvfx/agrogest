@@ -1,21 +1,23 @@
 
-from flask import Blueprint, render_template # e outros imports que você usa
+from flask import Blueprint, render_template, g # adicione os imports necessários
+# ... outros imports (get_db deve estar aqui ou ser importado)
 
-# ESTA LINHA ABAIXO É A QUE ESTÁ FALTANDO:
 relatorios_bp = Blueprint('relatorios', __name__)
 
 @relatorios_bp.route('/adubacao/<int:rec_id>/pdf')
-def gerar_pdf(rec_id):
+def gerar_pdf(rec_id):  # Mantenha apenas esta
     db = get_db()
     rec = db.execute("""
         SELECT r.*, t.nome as talhao_nome, t.area_ha
-        FROM recomendacoes_adubacao r
-        JOIN talhoes t ON t.id = r.talhao_id
-        WHERE r.id=?
+        FROM recomendacoes r
+        JOIN talhoes t ON r.talhao_id = t.id
+        WHERE r.id = ?
     """, (rec_id,)).fetchone()
-    analise = None
-    if rec and rec['analise_solo_id']:
-        analise = db.execute("SELECT * FROM analises_solo WHERE id=?", (rec['analise_solo_id'],)).fetchone()
+    
+    if rec is None:
+        return "Recomendação não encontrada", 404
+        
+    return render_template('relatorios/pdf_adubacao.html', rec=rec)
 
     # Importações das funções de classificação e parcelamento
     from modules.calculadora_adubacao import (
