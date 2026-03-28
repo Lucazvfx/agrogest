@@ -137,18 +137,23 @@
             background: var(--green-deep);
             border-top: 1px solid rgba(255,255,255,.10);
             box-shadow: 0 -4px 24px rgba(0,0,0,.22);
-            /* iOS safe area (home indicator) */
             padding-bottom: env(safe-area-inset-bottom, 0px);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .bottom-nav-inner {
             display: flex;
             align-items: stretch;
             height: var(--bottom-nav-h);
+            /* Permite scroll horizontal se não couber tudo */
+            min-width: max-content;
+            width: 100%;
         }
 
         .bottom-nav-item {
             flex: 1;
+            min-width: 60px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -156,7 +161,7 @@
             gap: 3px;
             color: rgba(255,255,255,.45);
             text-decoration: none;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 500;
             letter-spacing: .02em;
             position: relative;
@@ -167,19 +172,17 @@
         }
 
         .bottom-nav-item i {
-            font-size: 22px;
+            font-size: 20px;
             line-height: 1;
-            transition: transform .22s cubic-bezier(.34,1.56,.64,1),
-                        color .18s;
+            transition: transform .22s cubic-bezier(.34,1.56,.64,1), color .18s;
         }
 
-        /* Barra indicadora no topo do item ativo */
         .bottom-nav-item::before {
             content: '';
             position: absolute;
             top: 0; left: 50%;
             transform: translateX(-50%) scaleX(0);
-            width: 28px; height: 3px;
+            width: 24px; height: 3px;
             background: var(--gold);
             border-radius: 0 0 4px 4px;
             transition: transform .22s cubic-bezier(.34,1.56,.64,1);
@@ -187,12 +190,7 @@
 
         .bottom-nav-item.active { color: #fff; }
         .bottom-nav-item.active::before { transform: translateX(-50%) scaleX(1); }
-        .bottom-nav-item.active i {
-            transform: translateY(-3px);
-            color: var(--gold);
-        }
-
-        /* Ripple ao tocar */
+        .bottom-nav-item.active i { transform: translateY(-3px); color: var(--gold); }
         .bottom-nav-item:active { opacity: .75; }
 
         /* ══════════════════════════════════════════
@@ -318,29 +316,23 @@
         /* ══════════════════════════════════════════
            BREAKPOINTS
         ══════════════════════════════════════════ */
-
-        /* Tablet e mobile: oculta sidebar, exibe bottom nav */
         @media (max-width: 991.98px) {
             .sidebar { display: none !important; }
-
             .main-wrapper {
                 margin-left: 0;
                 padding: 16px 14px;
-                /* Espaço para a navbar inferior + safe area iOS */
                 padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 12px);
             }
-
             .bottom-nav { display: block; }
-
             .kpi-value  { font-size: 22px; }
             .page-title { font-size: 20px; }
         }
 
-        /* Telas muito pequenas (iPhone SE, 320px):
-           esconde labels de texto, amplia ícones */
-        @media (max-width: 374px) {
+        /* iPhone SE e telas muito pequenas — esconde labels */
+        @media (max-width: 480px) {
             .bottom-nav-item span { display: none; }
-            .bottom-nav-item i    { font-size: 24px; }
+            .bottom-nav-item i    { font-size: 22px; }
+            .bottom-nav-item      { min-width: 48px; }
             :root { --bottom-nav-h: 56px; }
         }
     </style>
@@ -350,10 +342,16 @@
 
 <!-- ══ SIDEBAR (desktop ≥ 992px) ═════════════════════════════════════════ -->
 <nav class="sidebar">
-    <a class="sidebar-brand" href="{{ url_for('adubacao.analises') }}">
+    <a class="sidebar-brand" href="{{ url_for('dashboard.index') }}">
         <div class="brand-name">AgroGest</div>
         <div class="brand-sub">Criado por Lucas</div>
     </a>
+
+    <div class="nav-section">
+        <div class="nav-section-label">Início</div>
+        <a class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}"
+           href="{{ url_for('dashboard.index') }}">
+            <i class="bi bi-speedometer2"></i> Dashboard
         </a>
     </div>
 
@@ -381,7 +379,7 @@
         </a>
         <a class="nav-link {% if 'recomendac' in request.endpoint %}active{% endif %}"
            href="{{ url_for('adubacao.recomendacoes') }}">
-            <i class="bi bi-calculator"></i> Calculadora
+            <i class="bi bi-calculator"></i> Calculadora NPK
         </a>
         <a class="nav-link {% if 'adubacoes' in request.endpoint %}active{% endif %}"
            href="{{ url_for('plantio.index') }}">
@@ -398,7 +396,7 @@
     </div>
 
     <div class="nav-section">
-        <div class="nav-section-label">Análises</div>
+        <div class="nav-section-label">Financeiro</div>
         <a class="nav-link {% if 'custos' in request.endpoint %}active{% endif %}"
            href="{{ url_for('custos.index') }}">
             <i class="bi bi-cash-stack"></i> Custos
@@ -430,11 +428,17 @@
     {% block content %}{% endblock %}
 </main>
 
-<!-- ══ BOTTOM NAVBAR (mobile / tablet < 992px) ═══════════════════════════ -->
+<!-- ══ BOTTOM NAVBAR (mobile / tablet < 992px) ═══════════════════════════
+     Todas as 8 abas. Em telas pequenas (<480px) os labels somem e
+     a barra vira scroll horizontal se necessário.
+════════════════════════════════════════════════════════════════════════════ -->
 <nav class="bottom-nav" aria-label="Navegação principal">
     <div class="bottom-nav-inner">
 
-
+        <a class="bottom-nav-item {% if request.endpoint == 'adubacao.analises' %}active{% endif %}"
+           href="{{ url_for('adubacao.analises') }}">
+            <i class="bi bi-speedometer2"></i>
+            <span>Início</span>
         </a>
 
         <a class="bottom-nav-item {% if 'talhoes' in request.endpoint %}active{% endif %}"
@@ -455,10 +459,28 @@
             <span>Colheitas</span>
         </a>
 
+        <a class="bottom-nav-item {% if 'analises' in request.endpoint or 'recomendac' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('adubacao.analises') }}">
+            <i class="bi bi-clipboard-data"></i>
+            <span>Solo</span>
+        </a>
+
+        <a class="bottom-nav-item {% if 'defensivos' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('defensivos.index') }}">
+            <i class="bi bi-shield-check"></i>
+            <span>Defensivos</span>
+        </a>
+
         <a class="bottom-nav-item {% if 'custos' in request.endpoint %}active{% endif %}"
            href="{{ url_for('custos.index') }}">
             <i class="bi bi-cash-stack"></i>
             <span>Custos</span>
+        </a>
+
+        <a class="bottom-nav-item {% if 'relatorios' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('relatorios.index') }}">
+            <i class="bi bi-file-earmark-bar-graph"></i>
+            <span>Relatórios</span>
         </a>
 
     </div>
