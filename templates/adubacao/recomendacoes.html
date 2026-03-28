@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Recomendações de Adubação{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1 class="page-title"><i class="bi bi-list-check me-2 text-success"></i>Recomendações Salvas</h1>
+        <p class="page-subtitle">Histórico de recomendações de adubação para milho</p>
+    </div>
+    <a href="{{ url_for('adubacao.nova_recomendacao') }}" class="btn btn-gold">
+        <i class="bi bi-plus-lg me-2"></i>Nova Recomendação
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if recomendacoes %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Talhão</th>
+                        <th>Safra</th>
+                        <th>Meta (t/ha)</th>
+                        <th>N (kg/ha)</th>
+                        <th>P₂O₅ (kg/ha)</th>
+                        <th>K₂O (kg/ha)</th>
+                        <th>Calcário (t/ha)</th>
+                        <th>Fert. Base / Dose</th>
+                        <th>Custo (R$)</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in recomendacoes %}
+                    <tr>
+                        <td class="ps-3 fw-bold">{{ r.talhao_nome }}</td>
+                        <td>{{ r.safra }}</td>
+                        <td>{{ r.meta_produtividade }}</td>
+                        <td><span class="badge" style="background:#1e40af">{{ r.n_recomendado }}</span></td>
+                        <td><span class="badge" style="background:#b45309">{{ r.p2o5_recomendado }}</span></td>
+                        <td><span class="badge" style="background:#6d28d9">{{ r.k2o_recomendado }}</span></td>
+                        <td>{% if r.necessidade_calcario > 0 %}<span class="badge bg-danger">{{ r.necessidade_calcario }}</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                        <td style="font-size:12px;">{{ r.fertilizante_base }}<br><strong>{{ r.dose_base }} kg/ha</strong></td>
+                        <td>{% if r.custo_estimado %}<strong>R$ {{ "%.0f"|format(r.custo_estimado) }}</strong>{% else %}—{% endif %}</td>
+                        <td>
+                            <a href="{{ url_for('relatorios.relatorio_adubacao', rec_id=r.id) }}"
+                               class="btn btn-sm btn-outline-primary" title="Relatório">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </a>
+                            <a href="{{ url_for('relatorios.pdf_adubacao', rec_id=r.id) }}"
+                               class="btn btn-sm btn-outline-danger" title="PDF" target="_blank">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <div style="font-size:48px;margin-bottom:16px;">📋</div>
+            <h5 class="fw-bold">Nenhuma recomendação salva</h5>
+            <p class="text-muted">Use a calculadora NPK para gerar e salvar recomendações</p>
+            <a href="{{ url_for('adubacao.nova_recomendacao') }}" class="btn btn-gold">
+                <i class="bi bi-calculator me-2"></i>Calcular Adubação
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

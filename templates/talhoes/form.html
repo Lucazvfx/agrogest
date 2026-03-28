@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if talhao else 'Novo' }} Talhão{% endblock %}
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('talhoes.index') }}">Talhões</a></li>
+            <li class="breadcrumb-item active">{{ 'Editar' if talhao else 'Novo Talhão' }}</li>
+        </ol>
+    </nav>
+    <h1 class="page-title">{{ 'Editar Talhão' if talhao else 'Novo Talhão' }}</h1>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-map me-2"></i>Dados do Talhão</div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Nome / Identificação *</label>
+                            <input type="text" name="nome" class="form-control"
+                                   value="{{ talhao.nome if talhao else '' }}" required
+                                   placeholder="Ex: Talhão A1, Gleba Norte...">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Área (ha) *</label>
+                            <input type="number" name="area_ha" class="form-control"
+                                   value="{{ talhao.area_ha if talhao else '' }}"
+                                   step="0.01" min="0.1" required placeholder="0.00">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Localização / Coordenadas</label>
+                            <input type="text" name="localizacao" class="form-control"
+                                   value="{{ talhao.localizacao if talhao else '' }}"
+                                   placeholder="Setor, quadrante ou GPS">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo de Solo</label>
+                            <select name="tipo_solo" class="form-select">
+                                <option value="">Selecione...</option>
+                                {% for solo in ['Latossolo Vermelho','Latossolo Vermelho-Amarelo','Argissolo','Cambissolo','Neossolo','Gleissolo'] %}
+                                <option {% if talhao and talhao.tipo_solo == solo %}selected{% endif %}>{{ solo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Observações</label>
+                            <textarea name="observacoes" class="form-control" rows="3"
+                                      placeholder="Características especiais, histórico...">{{ talhao.observacoes if talhao else '' }}</textarea>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-check-lg me-2"></i>{{ 'Atualizar' if talhao else 'Cadastrar' }}
+                        </button>
+                        <a href="{{ url_for('talhoes.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

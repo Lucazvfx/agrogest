@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}{{ talhao.nome }}{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('talhoes.index') }}">Talhões</a></li>
+                <li class="breadcrumb-item active">{{ talhao.nome }}</li>
+            </ol>
+        </nav>
+        <h1 class="page-title">{{ talhao.nome }}</h1>
+        <p class="page-subtitle">{{ talhao.area_ha }} ha &nbsp;·&nbsp; {{ talhao.tipo_solo or 'Solo não classificado' }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('adubacao.nova_analise') }}?talhao={{ talhao.id }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-clipboard-plus me-1"></i>Nova Análise
+        </a>
+        <a href="{{ url_for('talhoes.editar', id=talhao.id) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-pencil me-1"></i>Editar
+        </a>
+    </div>
+</div>
+
+<!-- Análises de Solo -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clipboard-data me-2"></i>Histórico de Análises de Solo</span>
+        <span class="badge bg-secondary">{{ analises|length }} análises</span>
+    </div>
+    <div class="card-body p-0">
+        {% if analises %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Data</th>
+                        <th>Safra</th>
+                        <th>pH</th>
+                        <th>P (mg/dm³)</th>
+                        <th>K (cmolc)</th>
+                        <th>CTC</th>
+                        <th>V%</th>
+                        <th>Argila%</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in analises %}
+                    <tr>
+                        <td class="ps-3">{{ a.data_coleta }}</td>
+                        <td>{{ a.safra or '—' }}</td>
+                        <td>
+                            <span class="badge rounded-pill
+                                {% if a.ph and a.ph < 5.5 %}bg-danger
+                                {% elif a.ph and a.ph < 6.0 %}bg-warning text-dark
+                                {% else %}bg-success{% endif %}">
+                                {{ "%.1f"|format(a.ph) if a.ph else '—' }}
+                            </span>
+                        </td>
+                        <td>{{ "%.1f"|format(a.fosforo) if a.fosforo else '—' }}</td>
+                        <td>{{ "%.3f"|format(a.potassio) if a.potassio else '—' }}</td>
+                        <td>{{ "%.1f"|format(a.ctc) if a.ctc else '—' }}</td>
+                        <td>{{ "%.0f"|format(a.saturacao_bases) if a.saturacao_bases else '—' }}%</td>
+                        <td>{{ "%.0f"|format(a.teor_argila) if a.teor_argila else '—' }}%</td>
+                        <td>
+                            <a href="{{ url_for('adubacao.editar_analise', id=a.id) }}"
+                               class="btn btn-xs btn-outline-secondary btn-sm">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-clipboard-x fs-3 d-block mb-2"></i>
+            Nenhuma análise cadastrada para este talhão.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Histórico de Plantios -->
+<div class="card">
+    <div class="card-header"><i class="bi bi-flower1 me-2"></i>Histórico de Plantios e Colheitas</div>
+    <div class="card-body p-0">
+        {% if plantios %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Safra</th>
+                        <th>Híbrido</th>
+                        <th>Área (ha)</th>
+                        <th>Status</th>
+                        <th>Produt. (sc/ha)</th>
+                        <th>Receita</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in plantios %}
+                    <tr>
+                        <td class="ps-3 fw-bold">{{ p.safra }}</td>
+                        <td>{{ p.hibrido or '—' }}</td>
+                        <td>{{ p.area_plantada or talhao.area_ha }}</td>
+                        <td>
+                            <span class="badge rounded-pill
+                                {% if p.status == 'colhido' %}bg-success
+                                {% elif p.status == 'plantado' %}bg-primary
+                                {% else %}bg-secondary{% endif %}">
+                                {{ p.status|title }}
+                            </span>
+                        </td>
+                        <td>{{ "%.1f"|format(p.produtividade_scha) if p.produtividade_scha else '—' }}</td>
+                        <td>{{ 'R$ ' + "%.0f"|format(p.receita_bruta) if p.receita_bruta else '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">Nenhum plantio registrado.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

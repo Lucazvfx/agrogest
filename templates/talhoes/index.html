@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Talhões{% endblock %}
+{% block content %}
+<div class="page-header d-flex align-items-center justify-content-between">
+    <div>
+        <h1 class="page-title"><i class="bi bi-map me-2 text-success"></i>Talhões</h1>
+        <p class="page-subtitle">Cadastro e gestão dos talhões da propriedade</p>
+    </div>
+    <a href="{{ url_for('talhoes.novo') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-2"></i>Novo Talhão
+    </a>
+</div>
+
+{% if talhoes %}
+<div class="row g-3">
+    {% for t in talhoes %}
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1" style="font-family:'Syne',sans-serif">{{ t.nome }}</h5>
+                        {% if t.localizacao %}
+                        <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ t.localizacao }}</small>
+                        {% endif %}
+                    </div>
+                    <span class="badge bg-success fs-6 px-3 py-2">{{ t.area_ha }} ha</span>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-4 text-center p-2" style="background:#f9fafb;border-radius:8px;">
+                        <div class="fw-bold text-success">{{ t.num_plantios or 0 }}</div>
+                        <div style="font-size:11px;color:#6b7280;">Plantios</div>
+                    </div>
+                    <div class="col-4 text-center p-2" style="background:#f9fafb;border-radius:8px;">
+                        <div class="fw-bold text-warning">{{ t.num_analises or 0 }}</div>
+                        <div style="font-size:11px;color:#6b7280;">Análises</div>
+                    </div>
+                    <div class="col-4 text-center p-2" style="background:#f9fafb;border-radius:8px;">
+                        <div class="fw-bold text-primary">{{ "%.1f"|format(t.melhor_produtividade or 0) }}</div>
+                        <div style="font-size:11px;color:#6b7280;">Melhor sc/ha</div>
+                    </div>
+                </div>
+
+                {% if t.tipo_solo %}
+                <div class="mb-2">
+                    <small class="text-muted"><i class="bi bi-layers me-1"></i>Solo: {{ t.tipo_solo }}</small>
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent d-flex gap-2">
+                <a href="{{ url_for('talhoes.detalhe', id=t.id) }}" class="btn btn-sm btn-outline-primary flex-fill">
+                    <i class="bi bi-eye me-1"></i>Detalhe
+                </a>
+                <a href="{{ url_for('talhoes.editar', id=t.id) }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <form method="POST" action="{{ url_for('talhoes.excluir', id=t.id) }}"
+                      onsubmit="return confirm('Excluir talhão {{ t.nome }}?')">
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <div style="font-size:48px;margin-bottom:16px;">🌱</div>
+        <h5 class="fw-bold">Nenhum talhão cadastrado</h5>
+        <p class="text-muted">Comece cadastrando os talhões da sua propriedade</p>
+        <a href="{{ url_for('talhoes.novo') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i>Cadastrar Primeiro Talhão
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

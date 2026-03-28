@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+{% block title %}Calculadora NPK{% endblock %}
+
+{% block extra_css %}
+<style>
+.param-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:13px}
+.param-row:last-child{border-bottom:none}
+.param-label{color:#6b7280}
+.param-value{font-weight:600}
+.interp-badge{font-size:11px;padding:2px 9px;border-radius:20px;font-weight:600}
+.result-section{animation:fadeUp .4s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.atencao-card{border-left:4px solid;border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:13px}
+.atencao-warning{border-color:#f59e0b;background:#fffbeb}
+.atencao-danger{border-color:#ef4444;background:#fef2f2}
+.atencao-info{border-color:#3b82f6;background:#eff6ff}
+.atencao-icon{font-weight:700;margin-right:6px}
+.n-range{font-size:11px;color:#6b7280;margin-top:2px}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+  <div>
+    <h1 class="page-title"><i class="bi bi-calculator me-2 text-success"></i>Calculadora de Adubação NPK</h1>
+    <p class="page-subtitle">Recomendação baseada no Manual Embrapa Cerrado — Milho Grão · Cap. 6, 7, 12</p>
+  </div>
+  <a href="{{ url_for('adubacao.recomendacoes') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-list me-1"></i>Ver Recomendações Salvas
+  </a>
+</div>
+
+<div class="row g-4">
+<!-- ════════════════════ FORMULÁRIO ════════════════════ -->
+<div class="col-lg-5">
+  <form method="POST" id="formCalc">
+
+  <!-- 1. Talhão -->
+  <div class="card mb-3">
+    <div class="card-header"><i class="bi bi-map me-2"></i>1. Talhão e Análise</div>
+    <div class="card-body">
+      <div class="mb-3">
+        <label class="form-label">Talhão</label>
+        <select name="talhao_id" class="form-select" id="selTalhao" required>
+          <option value="">Selecione...</option>
+          {% for t in talhoes %}
+          <option value="{{ t.id }}" data-area="{{ t.area_ha }}">{{ t.nome }} ({{ t.area_ha }} ha)</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Análise de Solo <small class="text-muted">(auto ao selecionar talhão)</small></label>
+        <select name="analise_id" class="form-select" id="selAnalise">
+          <option value="">Mais recente do talhão</option>
+          {% for a in analises %}
+          <option value="{{ a.id }}">{{ a.talhao_nome }} — {{ a.data_coleta }} {{ '('+a.safra+')' if a.safra else '' }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="row g-2">
+        <div class="col-6">
+          <label class="form-label">Safra</label>
+          <input type="text" name="safra" class="form-control" placeholder="Ex: 2024/25"
+                 value="{{ request.form.get('safra','') }}">
+        </div>
+        <div class="col-6">
+          <label class="form-label">Área (ha)</label>
+          <input type="number" name="area_ha" id="areaHa" class="form-control"
+                 value="{{ request.form.get('area_ha','1') }}" step="0.1" min="0.1">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Análise solo -->
+  <div class="card mb-3">
+    <div class="card-header"><i class="bi bi-clipboard-data me-2"></i>2. Dados da Análise de Solo</div>
+    <div class="card-body">
+      <div class="row g-2">
+        <div class="col-4">
+          <label class="form-label">pH</label>
+          <input type="number" name="ph" id="fPh" class="form-control" step="0.1" placeholder="5.5"
+                 value="{{ request.form.get('ph','') }}" required>
+        </div>
+        <div class="col-4">
+          <label class="form-label">P (mg/dm³)</label>
+          <input type="number" name="fosforo" id="fP" class="form-control" step="0.01" placeholder="8.0"
+                 value="{{ request.form.get('fosforo','') }}" required>
+        </div>
+        <div class="col-4">
+          <label class="form-label">K (cmolc/dm³)</label>
+          <input type="number" name="potassio" id="fK" class="form-control" step="0.001" placeholder="0.15"
+                 value="{{ request.form.get('potassio','') }}" required>
+        </div>
+        <div class="col-4">
+          <label class="form-label">CTC (cmolc/dm³)</label>
+          <input type="number" name="ctc" id="fCtc" class="form-control" step="0.01" placeholder="12.0"
+                 value="{{ request.form.get('ctc','') }}" required>
+        </div>
+        <div class="col-4">
+          <label class="form-label">V% saturação</label>
+          <input type="number" name="saturacao_bases" id="fV" class="form-control" step="0.1" placeholder="38"
+                 value="{{ request.form.get('saturacao_bases','') }}" required>
+        </div>
+        <div class="col-4">
+          <label class="form-label">Argila (%)</label>
+          <input type="number" name="teor_argila" id="fArgila" class="form-control" step="1" placeholder="45"
+                 value="{{ request.form.get('teor_argila','') }}" required>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Meta, sistema e histórico -->
+  <div class="card mb-3">
+    <div class="card-header"><i class="bi bi-bullseye me-2"></i>3. Meta, Sistema e Manejo</div>
+    <div class="card-body">
+      <div class="row g-2 mb-2">
+        <div class="col-md-6">
+          <label class="form-label">Meta de Produtividade</label>
+          <select name="meta_produtividade" class="form-select">
+            {% set meta_val = request.form.get('meta_produtividade','8') %}
+            {% for val,label in [('4','4 t/ha (~67 sc/ha)'),('6','6 t/ha (~100 sc/ha)'),('8','8 t/ha (~133 sc/ha)'),('10','10 t/ha (~167 sc/ha)'),('12','12 t/ha (~200 sc/ha)'),('14','14 t/ha (~233 sc/ha)')] %}
+            <option value="{{ val }}" {% if meta_val==val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Sistema de Cultivo
+            <small class="text-muted ms-1">(Tab. 3/4)</small>
+          </label>
+          <select name="irrigado" class="form-select">
+            <option value="false" {% if request.form.get('irrigado','false')!='true' %}selected{% endif %}>Sequeiro</option>
+            <option value="true"  {% if request.form.get('irrigado','false')=='true' %}selected{% endif %}>Irrigado</option>
+          </select>
+        </div>
+      </div>
+      <div class="mb-0">
+        <label class="form-label">Histórico da Área
+          <i class="bi bi-info-circle text-muted ms-1" data-bs-toggle="tooltip"
+             title="Cap. 12 Embrapa: após soja reduz 20-40% do N; Cerrado novo/1o ano PD aumenta 20%"></i>
+        </label>
+        <select name="historico_area" class="form-select">
+          {% set hist = request.form.get('historico_area','normal') %}
+          <option value="normal"      {% if hist=='normal' %}selected{% endif %}>Normal / Gramíneas anteriores</option>
+          <option value="apos_soja"   {% if hist=='apos_soja' %}selected{% endif %}>Após Soja (reduz ~30% do N)</option>
+          <option value="cerrado_novo"{% if hist=='cerrado_novo' %}selected{% endif %}>Cerrado recém-incorporado / 1º ano PD (+20% N)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Fertilizantes e custos -->
+  <div class="card mb-3">
+    <div class="card-header"><i class="bi bi-bag me-2"></i>4. Fertilizante e Custos</div>
+    <div class="card-body">
+      <div class="mb-2">
+        <label class="form-label">Fertilizante Base (semeadura)</label>
+        <select name="fertilizante_base" class="form-select">
+          {% for f in fertilizantes %}
+          <option {% if request.form.get('fertilizante_base','04-14-08')==f %}selected{% endif %}>{{ f }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-2">
+        <label class="form-label">Fertilizante Cobertura</label>
+        <select name="fertilizante_cobertura" class="form-select">
+          {% for c in coberturas %}
+          <option {% if request.form.get('fertilizante_cobertura','Ureia (45% N)')==c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="row g-2">
+        <div class="col-4">
+          <label class="form-label">PRNT (%)</label>
+          <input type="number" name="prnt_calcario" class="form-control"
+                 value="{{ request.form.get('prnt_calcario','100') }}" step="1" min="1" max="100">
+        </div>
+        <div class="col-4">
+          <label class="form-label">R$/t base</label>
+          <input type="number" name="preco_fert_base" class="form-control"
+                 value="{{ request.form.get('preco_fert_base','0') }}" step="1" min="0">
+        </div>
+        <div class="col-4">
+          <label class="form-label">R$/t cob.</label>
+          <input type="number" name="preco_fert_cob" class="form-control"
+                 value="{{ request.form.get('preco_fert_cob','0') }}" step="1" min="0">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" name="calcular" value="1" class="btn btn-primary w-100 py-2">
+    <i class="bi bi-calculator me-2"></i>Calcular Recomendação
+  </button>
+  </form>
+</div>
+
+<!-- ════════════════════ RESULTADO ════════════════════ -->
+<div class="col-lg-7">
+{% if resultado %}
+<form method="POST" id="formSalvar">
+  {% for k,v in request.form.items() %}
+  <input type="hidden" name="{{ k }}" value="{{ v }}">
+  {% endfor %}
+
+<div class="result-section">
+
+  <!-- Modo e histórico -->
+  <div class="d-flex gap-2 mb-3 flex-wrap">
+    <span class="badge px-3 py-2 {% if resultado.modo=='irrigado' %}bg-info{% else %}bg-success{% endif %}">
+      <i class="bi bi-{% if resultado.modo=='irrigado' %}droplet{% else %}sun{% endif %} me-1"></i>
+      {{ resultado.modo|title }}
+    </span>
+    {% if resultado.historico != 'normal' %}
+    <span class="badge bg-warning text-dark px-3 py-2">
+      <i class="bi bi-clock-history me-1"></i>
+      {% if resultado.historico=='apos_soja' %}Após Soja (N −30%)
+      {% else %}Cerrado Novo (N +20%){% endif %}
+    </span>
+    {% endif %}
+    {% if resultado.ajuste_n_pct %}
+    <span class="badge bg-secondary px-3 py-2">Ajuste N: {{ resultado.ajuste_n_pct }}%</span>
+    {% endif %}
+  </div>
+
+  <!-- Alertas -->
+  {% if resultado.alertas %}
+  <div class="mb-3">
+    {% for al in resultado.alertas %}
+    <div class="alert alert-{{ al.tipo }} py-2 mb-2 d-flex align-items-start">
+      <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+      <span>{{ al.msg }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ATENÇÕES DE DOSES -->
+  {% if resultado.atencoes %}
+  <div class="card mb-3" style="border:none">
+    <div class="card-header d-flex align-items-center gap-2" style="background:#fff8ed;border-color:#fde68a">
+      <i class="bi bi-exclamation-triangle text-warning fs-5"></i>
+      <span class="fw-bold">Atenções Agronômicas sobre Doses</span>
+      <span class="badge bg-warning text-dark ms-auto">{{ resultado.atencoes|length }}</span>
+    </div>
+    <div class="card-body p-3" style="background:#fff8ed">
+      {% for at in resultado.atencoes %}
+      <div class="atencao-card atencao-{{ at.nivel }}">
+        <div class="fw-bold mb-1" style="font-size:13px;">
+          <span class="badge rounded-pill me-2
+            {% if at.nivel=='danger' %}bg-danger
+            {% elif at.nivel=='warning' %}bg-warning text-dark
+            {% else %}bg-info{% endif %}" style="font-size:10px;">{{ at.nutriente }}</span>
+          {{ at.titulo }}
+        </div>
+        <div style="font-size:12px;color:#374151;line-height:1.5">{{ at.msg }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Interpretação do Solo -->
+  <div class="card mb-3">
+    <div class="card-header"><i class="bi bi-flask me-2"></i>Interpretação da Análise</div>
+    <div class="card-body pb-1">
+      <div class="row g-2 text-center">
+        {% for label, classe in [('pH', resultado.interpretacao.ph),
+            ('Fósforo', resultado.interpretacao.fosforo),
+            ('Potássio', resultado.interpretacao.potassio),
+            ('V% Saturação', resultado.interpretacao.saturacao),
+            ('CTC', resultado.interpretacao.ctc)] %}
+        <div class="col">
+          <div style="font-size:11px;color:#6b7280;font-weight:600;margin-bottom:4px;">{{ label }}</div>
+          <span class="interp-badge
+            {% if classe in ['Muito Baixo','Muito Acido','Muito Baixa'] %}badge-muito-baixo
+            {% elif classe in ['Baixo','Acido','Baixa'] %}badge-baixo
+            {% elif classe in ['Médio','Médio','Media'] %}badge-medio
+            {% elif classe in ['Adequado','Adequada','Media'] %}badge-adequado
+            {% else %}badge-alto{% endif %}">{{ classe }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Recomendação NPK -->
+  <div class="card mb-3">
+    <div class="card-header fw-bold"><i class="bi bi-droplet-half me-2"></i>Recomendação de Nutrientes</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <!-- N -->
+        <div class="col-6 col-md-3">
+          <div class="rec-card rec-n text-center p-3">
+            <div class="rec-label">NITROGÊNIO</div>
+            <div class="rec-value">{{ resultado.recomendacao.n_total }}</div>
+            <div class="rec-unit">kg N/ha total</div>
+          </div>
+          <div class="n-range text-center mt-1">
+            Base: {{ resultado.recomendacao.n_base }} + Cob: {{ resultado.recomendacao.n_cobertura_rec }}
+            (faixa {{ resultado.recomendacao.n_cobertura_min }}–{{ resultado.recomendacao.n_cobertura_max }})
+          </div>
+        </div>
+        <!-- P -->
+        <div class="col-6 col-md-3">
+          <div class="rec-card rec-p text-center p-3">
+            <div class="rec-label">FÓSFORO</div>
+            <div class="rec-value">{{ resultado.recomendacao.p2o5 }}</div>
+            <div class="rec-unit">kg P₂O₅/ha</div>
+          </div>
+          <div class="n-range text-center mt-1">
+            {{ resultado.recomendacao.p2o5_tipo|title }}
+            {% if resultado.recomendacao.p2o5_min != resultado.recomendacao.p2o5_max %}
+            ({{ resultado.recomendacao.p2o5_min }}–{{ resultado.recomendacao.p2o5_max }})
+            {% endif %}
+          </div>
+        </div>
+        <!-- K -->
+        <div class="col-6 col-md-3">
+          <div class="rec-card rec-k text-center p-3">
+            <div class="rec-label">POTÁSSIO</div>
+            <div class="rec-value">{{ resultado.recomendacao.k2o }}</div>
+            <div class="rec-unit">kg K₂O/ha</div>
+          </div>
+          <div class="n-range text-center mt-1">
+            Gradual: {{ resultado.recomendacao.k2o_grad }} kg/ha/ano
+          </div>
+        </div>
+        <!-- Calcário -->
+        <div class="col-6 col-md-3">
+          <div class="rec-card rec-ca text-center p-3">
+            <div class="rec-label">CALCÁRIO</div>
+            <div class="rec-value">{{ resultado.recomendacao.calcario }}</div>
+            <div class="rec-unit">t/ha</div>
+          </div>
+          <div class="n-range text-center mt-1">Método Sat. Bases (V₂=50%)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Parcelamento N -->
+  <div class="card mb-3">
+    <div class="card-header"><i class="bi bi-distribute-vertical me-2"></i>Parcelamento do Nitrogênio em Cobertura</div>
+    <div class="card-body p-0">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th class="ps-3">#</th>
+            <th>Época / Estágio</th>
+            <th>Dose (kg N/ha)</th>
+            <th>%</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="table-light">
+            <td class="ps-3"><span class="badge bg-secondary">0</span></td>
+            <td>Semeadura (V0)</td>
+            <td class="fw-bold">{{ resultado.n_base_semeadura }}</td>
+            <td>—</td>
+          </tr>
+          {% for p in resultado.parcelamento_n %}
+          <tr>
+            <td class="ps-3"><span class="badge bg-primary">{{ loop.index }}</span></td>
+            <td>{{ p.epoca }}</td>
+            <td class="fw-bold">{{ p.dose }}</td>
+            <td>{{ p.pct }}%</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="table-light">
+          <tr>
+            <td colspan="2" class="ps-3 fw-bold">TOTAL N</td>
+            <td class="fw-bold text-success">{{ resultado.recomendacao.n_total }}</td>
+            <td>—</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- Fertilizantes comerciais -->
+  <div class="card mb-3">
+    <div class="card-header"><i class="bi bi-bag me-2"></i>Fertilizantes Comerciais</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div style="background:#f0fdf4;border-radius:10px;padding:14px;border:1px solid #bbf7d0">
+            <div class="fw-bold mb-2 text-success"><i class="bi bi-flower1 me-1"></i>Semeadura — Base</div>
+            <div class="fs-6 fw-bold">{{ resultado.fertilizante_base.produto }}</div>
+            <div class="mt-2">
+              <div class="param-row">
+                <span class="param-label">Dose</span>
+                <span class="param-value text-success">{{ resultado.fertilizante_base.dose_kgha or '—' }} kg/ha</span>
+              </div>
+              <div class="param-row"><span class="param-label">N fornecido</span><span class="param-value">{{ resultado.fertilizante_base.n_fornecido or '—' }} kg/ha</span></div>
+              <div class="param-row"><span class="param-label">P₂O₅ fornecido</span><span class="param-value">{{ resultado.fertilizante_base.p_fornecido or '—' }} kg/ha</span></div>
+              <div class="param-row"><span class="param-label">K₂O fornecido</span><span class="param-value">{{ resultado.fertilizante_base.k_fornecido or '—' }} kg/ha</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div style="background:#eff6ff;border-radius:10px;padding:14px;border:1px solid #bfdbfe">
+            <div class="fw-bold mb-2 text-primary"><i class="bi bi-arrow-up-circle me-1"></i>Cobertura (total)</div>
+            <div class="fs-6 fw-bold">{{ resultado.fertilizante_cobertura.produto }}</div>
+            <div class="mt-2">
+              <div class="param-row">
+                <span class="param-label">Dose total</span>
+                <span class="param-value text-primary">{{ resultado.fertilizante_cobertura.dose_kgha or '—' }} kg/ha</span>
+              </div>
+              <div class="param-row"><span class="param-label">N fornecido</span><span class="param-value">{{ resultado.fertilizante_cobertura.n_fornecido or '—' }} kg/ha</span></div>
+              <div class="param-row">
+                <span class="param-label">Por aplicação ({{ resultado.parcelamento_n|length }}×)</span>
+                <span class="param-value">
+                  {% if resultado.fertilizante_cobertura.dose_kgha %}
+                  {{ (resultado.fertilizante_cobertura.dose_kgha / resultado.parcelamento_n|length)|round(0)|int }} kg/ha
+                  {% else %}—{% endif %}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if resultado.custo_estimado.total > 0 %}
+      <div class="mt-3 p-3" style="background:#fef9c3;border-radius:10px;border:1px solid #fde68a">
+        <div class="row text-center">
+          <div class="col-4">
+            <div class="fw-bold" style="color:#92400e">R$ {{ "%.0f"|format(resultado.custo_estimado.base) }}</div>
+            <div style="font-size:11px;color:#92400e">Custo Base</div>
+          </div>
+          <div class="col-4">
+            <div class="fw-bold" style="color:#92400e">R$ {{ "%.0f"|format(resultado.custo_estimado.cob) }}</div>
+            <div style="font-size:11px;color:#92400e">Custo Cobertura</div>
+          </div>
+          <div class="col-4">
+            <div class="fw-bold fs-5" style="color:#78350f">R$ {{ "%.0f"|format(resultado.custo_estimado.total) }}</div>
+            <div style="font-size:11px;color:#78350f">TOTAL Estimado</div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="d-flex gap-2">
+    <button type="submit" name="salvar" value="1" form="formSalvar" class="btn btn-gold flex-fill py-2">
+      <i class="bi bi-save me-2"></i>Salvar Recomendação
+    </button>
+    <a href="{{ url_for('relatorios.index') }}" class="btn btn-outline-secondary">
+      <i class="bi bi-file-earmark-pdf me-1"></i>Relatório
+    </a>
+  </div>
+
+</div><!-- /result-section -->
+</form>
+
+{% else %}
+<div class="card" style="min-height:420px">
+  <div class="card-body d-flex flex-column align-items-center justify-content-center text-center">
+    <div style="font-size:64px;margin-bottom:16px">🌽</div>
+    <h5 class="fw-bold">Calculadora de Adubação NPK</h5>
+    <p class="text-muted" style="max-width:360px">
+      Preencha os dados à esquerda com os resultados da análise de solo, sistema de cultivo
+      e histórico da área para obter a recomendação completa Embrapa.
+    </p>
+    <div class="d-flex gap-2 flex-wrap justify-content-center mt-2">
+      <span class="badge bg-success px-3 py-2">Tabelas 3/4 — P por argila</span>
+      <span class="badge bg-primary px-3 py-2">Tabela 5 — K por CTC</span>
+      <span class="badge bg-warning text-dark px-3 py-2">Cap.12 — N por produtividade</span>
+      <span class="badge bg-danger px-3 py-2">Atenções de Doses</span>
+    </div>
+  </div>
+</div>
+{% endif %}
+</div><!-- /col resultado -->
+</div><!-- /row -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Tooltips Bootstrap
+document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+
+// Auto-fill solo ao selecionar talhão
+document.getElementById('selTalhao').addEventListener('change', function() {
+  const id = this.value;
+  const opt = this.options[this.selectedIndex];
+  if (opt.dataset.area) document.getElementById('areaHa').value = opt.dataset.area;
+  if (!id) return;
+  fetch(`/adubacao/api/analise/${id}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.ph)              document.getElementById('fPh').value     = d.ph;
+      if (d.fosforo)         document.getElementById('fP').value      = d.fosforo;
+      if (d.potassio)        document.getElementById('fK').value      = d.potassio;
+      if (d.ctc)             document.getElementById('fCtc').value    = d.ctc;
+      if (d.saturacao_bases) document.getElementById('fV').value      = d.saturacao_bases;
+      if (d.teor_argila)     document.getElementById('fArgila').value = d.teor_argila;
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if analise else 'Nova' }} Análise de Solo{% endblock %}
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('adubacao.analises') }}">Análises de Solo</a></li>
+            <li class="breadcrumb-item active">{{ 'Editar' if analise else 'Nova Análise' }}</li>
+        </ol>
+    </nav>
+    <h1 class="page-title">{{ 'Editar Análise' if analise else 'Nova Análise de Solo' }}</h1>
+    <p class="page-subtitle">Preencha os resultados do laudo laboratorial</p>
+</div>
+
+<form method="POST">
+<div class="row g-4">
+    <!-- Identificação -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-info-circle me-2"></i>Identificação</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Talhão *</label>
+                    <select name="talhao_id" class="form-select" required>
+                        <option value="">Selecione...</option>
+                        {% for t in talhoes %}
+                        <option value="{{ t.id }}"
+                            {% if analise and analise.talhao_id == t.id %}selected{% endif %}>
+                            {{ t.nome }} ({{ t.area_ha }} ha)
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Data da Coleta *</label>
+                    <input type="date" name="data_coleta" class="form-control"
+                           value="{{ analise.data_coleta if analise else '' }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Safra de Referência</label>
+                    <input type="text" name="safra" class="form-control"
+                           value="{{ analise.safra if analise else '' }}"
+                           placeholder="Ex: 2024/25">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Profundidade</label>
+                    <select name="profundidade" class="form-select">
+                        {% for prof in ['0-20 cm','20-40 cm','0-10 cm','10-20 cm'] %}
+                        <option {% if analise and analise.profundidade == prof %}selected{% endif %}>{{ prof }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label">Teor de Argila (%)</label>
+                    <input type="number" name="teor_argila" class="form-control"
+                           value="{{ analise.teor_argila if analise else '' }}"
+                           step="1" min="0" max="100" placeholder="Ex: 45">
+                    <div class="form-text">Essencial para interpretar o fósforo</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reação do Solo -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-activity me-2"></i>Reação e Fertilidade</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">pH (CaCl₂) *</label>
+                        <input type="number" name="ph" class="form-control"
+                               value="{{ analise.ph if analise else '' }}"
+                               step="0.1" min="3" max="9" placeholder="Ex: 5.5" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Fósforo — P (mg/dm³)</label>
+                        <input type="number" name="fosforo" class="form-control"
+                               value="{{ analise.fosforo if analise else '' }}"
+                               step="0.01" min="0" placeholder="Mehlich-1">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Potássio — K (cmolc)</label>
+                        <input type="number" name="potassio" class="form-control"
+                               value="{{ analise.potassio if analise else '' }}"
+                               step="0.001" min="0" placeholder="0.000">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Cálcio — Ca (cmolc)</label>
+                        <input type="number" name="calcio" class="form-control"
+                               value="{{ analise.calcio if analise else '' }}"
+                               step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Magnésio — Mg (cmolc)</label>
+                        <input type="number" name="magnesio" class="form-control"
+                               value="{{ analise.magnesio if analise else '' }}"
+                               step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Alumínio — Al (cmolc)</label>
+                        <input type="number" name="aluminio" class="form-control"
+                               value="{{ analise.aluminio if analise else '' }}"
+                               step="0.01" min="0" placeholder="0.00">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">H+Al (cmolc)</label>
+                        <input type="number" name="h_al" class="form-control"
+                               value="{{ analise.h_al if analise else '' }}"
+                               step="0.01" min="0" placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTC e Saturação -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-bar-chart me-2"></i>CTC e Saturação</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">CTC — Capacidade de Troca Catiônica</label>
+                        <div class="input-group">
+                            <input type="number" name="ctc" class="form-control"
+                                   value="{{ analise.ctc if analise else '' }}"
+                                   step="0.01" min="0" placeholder="Ex: 12.5">
+                            <span class="input-group-text">cmolc/dm³</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Saturação por Bases — V% *</label>
+                        <div class="input-group">
+                            <input type="number" name="saturacao_bases" class="form-control"
+                                   value="{{ analise.saturacao_bases if analise else '' }}"
+                                   step="0.1" min="0" max="100" placeholder="Ex: 38.5" required>
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <div class="form-text">Usado no cálculo de calagem (meta: 50%)</div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Matéria Orgânica — MO (%)</label>
+                        <input type="number" name="materia_organica" class="form-control"
+                               value="{{ analise.materia_organica if analise else '' }}"
+                               step="0.01" min="0" placeholder="Ex: 3.2">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Observações</label>
+                        <textarea name="observacoes" class="form-control" rows="3"
+                                  placeholder="Notas, laboratório, método...">{{ analise.observacoes if analise else '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Box de ajuda -->
+        <div class="card mt-3" style="background:#f0fdf4;border-color:#bbf7d0;">
+            <div class="card-body p-3">
+                <div class="fw-bold text-success mb-1" style="font-size:13px;">
+                    <i class="bi bi-lightbulb me-1"></i>Dica Embrapa Cerrado
+                </div>
+                <ul class="mb-0 ps-3" style="font-size:12px;color:#374151;">
+                    <li>pH ideal milho: <strong>5.5 – 6.5</strong></li>
+                    <li>V% alvo: <strong>50 – 70%</strong></li>
+                    <li>CTC média: <strong>8 – 15 cmolc</strong></li>
+                    <li>MO adequada: <strong>&gt; 3%</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 d-flex gap-2">
+    <button type="submit" class="btn btn-primary px-5">
+        <i class="bi bi-check-lg me-2"></i>{{ 'Atualizar Análise' if analise else 'Salvar Análise' }}
+    </button>
+    <a href="{{ url_for('adubacao.analises') }}" class="btn btn-outline-secondary">Cancelar</a>
+    {% if not analise %}
+    <a href="{{ url_for('adubacao.nova_recomendacao') }}" class="btn btn-gold ms-auto">
+        <i class="bi bi-calculator me-2"></i>Ir para Calculadora NPK
+    </a>
+    {% endif %}
+</div>
+</form>
+{% endblock %}

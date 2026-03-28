@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AgroGest{% endblock %} | Faculdade </title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Fonte alterada para Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green-deep:   #1a3a1f;
+            --green-mid:    #2d6a35;
+            --green-bright: #3d9e48;
+            --green-light:  #6abf71;
+            --gold:         #e8b94a;
+            --gold-light:   #f5d87a;
+            --cream:        #faf7f0;
+            --soil:         #6b4423;
+            --soil-light:   #a0714f;
+            --text-dark:    #1a1a1a;
+            --text-muted:   #6b7280;
+            --border:       #e5e7eb;
+            --shadow:       0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.04);
+            --shadow-lg:    0 8px 24px rgba(0,0,0,.10);
+            --radius:       12px;
+        }
+
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif; /* alterado para Inter */
+            background: #f0f4f0;
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        /* ── SIDEBAR ────────────────────────────── */
+        .sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: var(--green-deep);
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,.08);
+            text-decoration: none;
+        }
+        .brand-icon {
+            width: 44px; height: 44px;
+            background: var(--gold);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        .brand-name {
+            font-family: 'Inter', sans-serif; /* alterado para Inter */
+            font-weight: 800;
+            font-size: 20px;
+            color: #fff;
+            line-height: 1;
+        }
+        .brand-sub {
+            font-size: 11px;
+            color: rgba(255,255,255,.5);
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-top: 2px;
+        }
+
+        .nav-section {
+            padding: 16px 12px 4px;
+        }
+        .nav-section-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: rgba(255,255,255,.35);
+            padding: 0 8px;
+            margin-bottom: 4px;
+        }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            color: rgba(255,255,255,.7);
+            font-size: 14px;
+            font-weight: 400;
+            text-decoration: none;
+            transition: all .15s;
+        }
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,.1);
+            color: #fff;
+        }
+        .nav-link.active {
+            background: var(--green-bright);
+            color: #fff;
+        }
+        .nav-link i { font-size: 16px; width: 20px; text-align: center; }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 16px;
+            border-top: 1px solid rgba(255,255,255,.08);
+            font-size: 12px;
+            color: rgba(255,255,255,.3);
+            text-align: center;
+        }
+
+        /* ── MAIN CONTENT ───────────────────────── */
+        .main-wrapper {
+            margin-left: 260px;
+            padding: 28px;
+            min-height: 100vh;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+        .page-title {
+            font-family: 'Inter', sans-serif; /* alterado para Inter */
+            font-weight: 700;
+            font-size: 26px;
+            color: var(--text-dark);
+            margin: 0;
+        }
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 2px;
+        }
+
+        /* ── CARDS ──────────────────────────────── */
+        .card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border);
+            padding: 16px 20px;
+            font-family: 'Inter', sans-serif; /* alterado para Inter */
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        /* ── KPI CARDS ──────────────────────────── */
+        .kpi-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+        }
+        .kpi-card.green::before  { background: var(--green-bright); }
+        .kpi-card.gold::before   { background: var(--gold); }
+        .kpi-card.soil::before   { background: var(--soil-light); }
+        .kpi-card.blue::before   { background: #3b82f6; }
+
+        .kpi-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+        .kpi-icon.green  { background: #dcfce7; color: var(--green-mid); }
+        .kpi-icon.gold   { background: #fef9c3; color: #92400e; }
+        .kpi-icon.soil   { background: #fde8d6; color: var(--soil); }
+        .kpi-icon.blue   { background: #dbeafe; color: #1d4ed8; }
+
+        .kpi-value {
+            font-family: 'Inter', sans-serif; /* alterado para Inter */
+            font-weight: 700;
+            font-size: 28px;
+            line-height: 1;
+            color: var(--text-dark);
+        }
+        .kpi-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+
+        /* ── TABLES ─────────────────────────────── */
+        .table { font-size: 14px; }
+        .table th {
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: var(--text-muted);
+            background: #f9fafb;
+            border-bottom: 1px solid var(--border);
+        }
+        .table td { vertical-align: middle; border-color: var(--border); }
+        .table-hover tbody tr:hover { background: #f9fafb; }
+
+        /* ── BADGES ─────────────────────────────── */
+        .badge-muito-baixo  { background: #fee2e2; color: #991b1b; }
+        .badge-baixo        { background: #fef3c7; color: #92400e; }
+        .badge-medio        { background: #dbeafe; color: #1e40af; }
+        .badge-adequado     { background: #dcfce7; color: #166534; }
+        .badge-alto         { background: #d1fae5; color: #065f46; }
+
+        /* ── BUTTONS ────────────────────────────── */
+        .btn-primary {
+            background: var(--green-mid);
+            border-color: var(--green-mid);
+            font-weight: 500;
+        }
+        .btn-primary:hover {
+            background: var(--green-deep);
+            border-color: var(--green-deep);
+        }
+        .btn-outline-primary {
+            color: var(--green-mid);
+            border-color: var(--green-mid);
+        }
+        .btn-outline-primary:hover {
+            background: var(--green-mid);
+            border-color: var(--green-mid);
+        }
+        .btn-gold {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: var(--green-deep);
+            font-weight: 600;
+        }
+        .btn-gold:hover {
+            background: #d4a73a;
+            border-color: #d4a73a;
+            color: var(--green-deep);
+        }
+
+        /* ── FORMS ──────────────────────────────── */
+        .form-label { font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px; }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            padding: 8px 12px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--green-bright);
+            box-shadow: 0 0 0 3px rgba(61,158,72,.12);
+        }
+
+        /* ── ALERTS ─────────────────────────────── */
+        .alert { border-radius: var(--radius); border: none; font-size: 14px; }
+        .alert-success { background: #dcfce7; color: #166534; }
+        .alert-warning { background: #fef9c3; color: #92400e; }
+        .alert-danger  { background: #fee2e2; color: #991b1b; }
+        .alert-info    { background: #dbeafe; color: #1e40af; }
+
+        /* ── RECOMENDAÇÃO CARDS ──────────────────── */
+        .rec-card {
+            background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
+            border-radius: var(--radius);
+            padding: 20px;
+            color: #fff;
+        }
+        .rec-value {
+            font-family: 'Inter', sans-serif; /* alterado para Inter */
+            font-size: 36px;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .rec-unit { font-size: 14px; opacity: .8; }
+        .rec-label { font-size: 12px; opacity: .7; margin-top: 4px; text-transform: uppercase; }
+
+        .rec-n  { background: linear-gradient(135deg, #1e3a5f, #2563eb); }
+        .rec-p  { background: linear-gradient(135deg, #3d1a00, #b45309); }
+        .rec-k  { background: linear-gradient(135deg, #4a1942, #7c3aed); }
+        .rec-ca { background: linear-gradient(135deg, #1a3a2a, #059669); }
+
+        /* ── MISC ───────────────────────────────── */
+        .breadcrumb { font-size: 13px; }
+        .section-divider { border-top: 1px solid var(--border); margin: 24px 0; }
+        
+        .corn-bg {
+            background-image: radial-gradient(circle at 80% 50%, rgba(61,158,72,.06) 0%, transparent 60%);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-wrapper { margin-left: 0; padding: 16px; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+    <a class="sidebar-brand d-block" href="{{ url_for('dashboard.index') }}">
+        <div class="brand-name">AgroGest</div>
+        <div class="brand-sub">Criado por Lucas</div>
+    </a>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-label">Produção</div>
+        <a class="nav-link {% if 'talhoes' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('talhoes.index') }}">
+            <i class="bi bi-map"></i> Talhões
+        </a>
+        <a class="nav-link {% if 'plantio' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('plantio.index') }}">
+            <i class="bi bi-flower1"></i> Plantios
+        </a>
+        <a class="nav-link {% if 'colheita' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('colheita.index') }}">
+            <i class="bi bi-basket3"></i> Colheitas
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-label">Solo & Adubação</div>
+        <a class="nav-link {% if 'analises' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('adubacao.analises') }}">
+            <i class="bi bi-clipboard-data"></i> Análises de Solo
+        </a>
+        <a class="nav-link {% if 'recomendac' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('adubacao.recomendacoes') }}">
+            <i class="bi bi-calculator"></i> Calculadora
+        </a>
+        <a class="nav-link {% if 'adubacoes' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('plantio.index') }}">
+            <i class="bi bi-droplet-half"></i> Aplicações
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-label">Manejo</div>
+        <a class="nav-link {% if 'defensivos' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('defensivos.index') }}">
+            <i class="bi bi-shield-check"></i> Defensivos
+        </a>
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-section-label">Análises</div>
+        <a class="nav-link {% if 'relatorios' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('relatorios.index') }}">
+            <i class="bi bi-file-earmark-bar-graph"></i> Relatórios
+        </a>
+    </div>
+
+    <div class="sidebar-footer">
+         AgroGest<br>
+        Projeto faculdade
+    </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main-wrapper">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show mb-3" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex align-items-center justify-content-between">
+    <div>
+        <h1 class="page-title">🌽 Dashboard</h1>
+        <p class="page-subtitle">Visão geral da sua propriedade agrícola</p>
+    </div>
+    <a href="{{ url_for('adubacao.nova_recomendacao') }}" class="btn btn-gold">
+        <i class="bi bi-calculator me-2"></i>Nova Recomendação NPK
+    </a>
+</div>
+
+<!-- ALERTAS ESTOQUE -->
+{% if alertas_estoque %}
+<div class="alert alert-warning d-flex align-items-center mb-4">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <strong>Alerta de Estoque:</strong>&nbsp;
+    {% for a in alertas_estoque %}{{ a.produto }} ({{ a.quantidade_kg }} kg){% if not loop.last %}, {% endif %}{% endfor %}
+    — estoque abaixo de 500 kg.
+</div>
+{% endif %}
+
+<!-- KPI CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="kpi-card green">
+            <div class="kpi-icon green"><i class="bi bi-map"></i></div>
+            <div class="kpi-value">{{ area_total }}</div>
+            <div class="kpi-label">Área Total (ha)</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="kpi-card gold">
+            <div class="kpi-icon gold"><i class="bi bi-flower1"></i></div>
+            <div class="kpi-value">{{ area_plantada }}</div>
+            <div class="kpi-label">Área Plantada (ha)</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="kpi-card soil">
+            <div class="kpi-icon soil"><i class="bi bi-basket3"></i></div>
+            <div class="kpi-value">{{ "%.1f"|format(prod_media) }}</div>
+            <div class="kpi-label">Produt. Média (sc/ha)</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="kpi-card blue">
+            <div class="kpi-icon blue"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="kpi-value">R$ {{ "%.0f"|format(lucro_estimado) }}</div>
+            <div class="kpi-label">Resultado Estimado</div>
+        </div>
+    </div>
+</div>
+
+<!-- GRÁFICOS -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-bar-chart me-2 text-success"></i>Produtividade por Safra</span>
+            </div>
+            <div class="card-body p-3">
+                <canvas id="chartSafra" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header">
+                <i class="bi bi-pie-chart me-2 text-warning"></i>Custos por Categoria
+            </div>
+            <div class="card-body p-3 d-flex align-items-center">
+                <canvas id="chartCustos" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PLANTIOS ATIVOS + ÚLTIMAS COLHEITAS -->
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-flower1 me-2"></i>Plantios em Andamento</span>
+                <a href="{{ url_for('plantio.index') }}" class="btn btn-sm btn-outline-primary">Ver todos</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Talhão</th>
+                            <th>Safra</th>
+                            <th>Área</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if plantios_ativos %}
+                            {% for p in plantios_ativos %}
+                            <tr>
+                                <td class="ps-3 fw-500">{{ p.talhao_nome }}</td>
+                                <td>{{ p.safra }}</td>
+                                <td>{{ p.area_ha }} ha</td>
+                                <td>
+                                    <span class="badge rounded-pill
+                                        {% if p.status == 'plantado' %}bg-success
+                                        {% elif p.status == 'planejado' %}bg-warning text-dark
+                                        {% else %}bg-info{% endif %}">
+                                        {{ p.status|title }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                        <tr><td colspan="4" class="text-center text-muted py-3">Nenhum plantio ativo</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-basket3 me-2"></i>Últimas Colheitas</span>
+                <a href="{{ url_for('colheita.index') }}" class="btn btn-sm btn-outline-primary">Ver todas</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Talhão</th>
+                            <th>Safra</th>
+                            <th>Prod. (sc/ha)</th>
+                            <th>Receita</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if ultimas_colheitas %}
+                            {% for c in ultimas_colheitas %}
+                            <tr>
+                                <td class="ps-3">{{ c.talhao_nome }}</td>
+                                <td>{{ c.safra }}</td>
+                                <td>
+                                    <strong>{{ "%.1f"|format(c.produtividade_scha or 0) }}</strong>
+                                </td>
+                                <td>R$ {{ "%.0f"|format(c.receita_bruta or 0) }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                        <tr><td colspan="4" class="text-center text-muted py-3">Nenhuma colheita registrada</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AÇÕES RÁPIDAS -->
+<div class="row g-3 mt-1">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-lightning me-2"></i>Ações Rápidas</div>
+            <div class="card-body d-flex flex-wrap gap-2">
+                <a href="{{ url_for('talhoes.novo') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i>Novo Talhão
+                </a>
+                <a href="{{ url_for('plantio.novo') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-flower1 me-1"></i>Novo Plantio
+                </a>
+                <a href="{{ url_for('adubacao.nova_analise') }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-clipboard-data me-1"></i>Análise de Solo
+                </a>
+                <a href="{{ url_for('adubacao.nova_recomendacao') }}" class="btn btn-gold btn-sm">
+                    <i class="bi bi-calculator me-1"></i>Calcular Adubação
+                </a>
+                <a href="{{ url_for('relatorios.index') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>Relatórios
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const safras  = {{ prod_safra | map(attribute='safra') | list | tojson }};
+const prods   = {{ prod_safra | map(attribute='prod_media') | list | tojson }};
+const receitas= {{ prod_safra | map(attribute='receita') | list | tojson }};
+const catLabels = {{ custos_cat | map(attribute='categoria') | list | tojson }};
+const catVals   = {{ custos_cat | map(attribute='total') | list | tojson }};
+
+// Produtividade por safra
+if (document.getElementById('chartSafra')) {
+    new Chart(document.getElementById('chartSafra'), {
+        data: {
+            labels: safras.length ? safras : ['Sem dados'],
+            datasets: [{
+                type: 'bar',
+                label: 'Produtividade (sc/ha)',
+                data: prods.length ? prods : [0],
+                backgroundColor: 'rgba(45,106,53,.75)',
+                borderRadius: 6,
+                yAxisID: 'y',
+            },{
+                type: 'line',
+                label: 'Receita (R$)',
+                data: receitas.length ? receitas : [0],
+                borderColor: '#e8b94a',
+                backgroundColor: 'rgba(232,185,74,.1)',
+                tension: .4,
+                yAxisID: 'y2',
+                fill: true,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y:  { position: 'left',  title: { display: true, text: 'sc/ha' } },
+                y2: { position: 'right', title: { display: true, text: 'R$' }, grid: { drawOnChartArea: false } }
+            }
+        }
+    });
+}
+
+// Custos por categoria
+if (document.getElementById('chartCustos')) {
+    new Chart(document.getElementById('chartCustos'), {
+        type: 'doughnut',
+        data: {
+            labels: catLabels.length ? catLabels : ['Sem dados'],
+            datasets: [{
+                data: catVals.length ? catVals : [1],
+                backgroundColor: ['#2d6a35','#e8b94a','#6abf71','#6b4423','#3b82f6','#7c3aed','#059669','#b45309'],
+                borderWidth: 2,
+                borderColor: '#fff',
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } },
+            cutout: '62%',
+        }
+    });
+}
+</script>
+{% endblock %}

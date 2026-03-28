@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: A4; margin: 2cm; }
+  body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; margin: 0; }
+  
+  .header { background: #1a3a1f; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+  .header h1 { font-size: 22px; margin: 0 0 4px 0; }
+  .header p { margin: 0; opacity: .8; font-size: 12px; }
+  
+  .section { margin-bottom: 20px; }
+  .section-title { font-size: 14px; font-weight: bold; color: #2d6a35; border-bottom: 2px solid #2d6a35; padding-bottom: 4px; margin-bottom: 12px; }
+  
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  th { background: #f0fdf4; color: #166534; font-weight: bold; padding: 6px 10px; text-align: left; border: 1px solid #d1fae5; font-size: 11px; }
+  td { padding: 6px 10px; border: 1px solid #e5e7eb; vertical-align: top; }
+  tr:nth-child(even) td { background: #f9fafb; }
+  
+  .npk-box { display: inline-block; text-align: center; padding: 12px 16px; border-radius: 8px; margin: 4px; min-width: 80px; }
+  .npk-n { background: #dbeafe; }
+  .npk-p { background: #ffedd5; }
+  .npk-k { background: #ede9fe; }
+  .npk-ca { background: #dcfce7; }
+  .npk-value { font-size: 20px; font-weight: bold; }
+  .npk-label { font-size: 10px; color: #6b7280; }
+  
+  .footer { text-align: center; font-size: 10px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 20px; }
+  
+  .alert-box { background: #fef9c3; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px; margin-top: 10px; font-size: 11px; }
+  
+  .logo-row { display: flex; justify-content: space-between; align-items: center; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: bold; background: #dcfce7; color: #166534; }
+  
+  .interpretacao-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+  .interpretacao-item { flex: 1; min-width: 100px; background: #f9fafb; border-radius: 8px; padding: 8px; text-align: center; border: 1px solid #e5e7eb; }
+  .interpretacao-label { font-size: 11px; color: #6b7280; margin-bottom: 4px; }
+  .interpretacao-valor { font-weight: bold; font-size: 14px; }
+  .interpretacao-classe { font-size: 10px; color: #2d6a35; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-row">
+    <div>
+      <h1>AgroGest — Recomendação de Adubação</h1>
+      <p>Talhão: <strong>{{ rec.talhao_nome }}</strong> &nbsp;·&nbsp; Safra: <strong>{{ rec.safra }}</strong> &nbsp;·&nbsp; Área: {{ rec.area_ha }} ha</p>
+    </div>
+    <div style="text-align:right;font-size:11px;opacity:.8;">
+      Gerado em: {{ rec.criado_em.strftime('%d/%m/%Y %H:%M') }}<br>
+      Apenas estudo
+    </div>
+  </div>
+</div>
+
+{% if analise %}
+<div class="section">
+  <div class="section-title">📋 Análise de Solo</div>
+  <div class="interpretacao-grid">
+    <div class="interpretacao-item">
+      <div class="interpretacao-label">pH</div>
+      <div class="interpretacao-valor">{{ analise.ph }}</div>
+      <div class="interpretacao-classe">{{ interpretacoes.ph_classe }}</div>
+    </div>
+    <div class="interpretacao-item">
+      <div class="interpretacao-label">Fósforo (P)</div>
+      <div class="interpretacao-valor">{{ analise.fosforo }} mg/dm³</div>
+      <div class="interpretacao-classe">{{ interpretacoes.p_classe }}</div>
+    </div>
+    <div class="interpretacao-item">
+      <div class="interpretacao-label">Potássio (K)</div>
+      <div class="interpretacao-valor">{{ analise.potassio }} cmolc/dm³</div>
+      <div class="interpretacao-classe">{{ interpretacoes.k_classe }}</div>
+    </div>
+    <div class="interpretacao-item">
+      <div class="interpretacao-label">CTC</div>
+      <div class="interpretacao-valor">{{ analise.ctc }} cmolc/dm³</div>
+      <div class="interpretacao-classe">{{ interpretacoes.ctc_classe }}</div>
+    </div>
+    <div class="interpretacao-item">
+      <div class="interpretacao-label">V%</div>
+      <div class="interpretacao-valor">{{ analise.saturacao_bases }}%</div>
+      <div class="interpretacao-classe">{{ interpretacoes.v_classe }}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Parâmetro</th><th>Valor</th><th>Parâmetro</th><th>Valor</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>pH (CaCl₂)</td><td><strong>{{ analise.ph }}</strong></td>
+        <td>CTC (cmolc/dm³)</td><td><strong>{{ analise.ctc }}</strong></td>
+      </tr>
+      <tr>
+        <td>Fósforo — P (mg/dm³)</td><td><strong>{{ analise.fosforo }}</strong></td>
+        <td>Saturação por Bases — V%</td><td><strong>{{ analise.saturacao_bases }}%</strong></td>
+      </tr>
+      <tr>
+        <td>Potássio — K (cmolc)</td><td><strong>{{ analise.potassio }}</strong></td>
+        <td>Teor de Argila</td><td><strong>{{ analise.teor_argila }}%</strong></td>
+      </tr>
+      <tr>
+        <td>Cálcio — Ca (cmolc)</td><td>{{ analise.calcio or '—' }}</td>
+        <td>H+Al (cmolc)</td><td>{{ analise.h_al or '—' }}</td>
+      </tr>
+      <tr>
+        <td>Magnésio — Mg (cmolc)</td><td>{{ analise.magnesio or '—' }}</td>
+        <td>Matéria Orgânica</td><td>{{ analise.materia_organica or '—' }}%</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="section">
+  <div class="section-title">🌽 Recomendação de Nutrientes</div>
+  <p>Meta de produtividade: <strong>{{ rec.meta_produtividade }} t/ha</strong></p>
+  <div>
+    <div class="npk-box npk-n">
+      <div class="npk-value">{{ rec.n_recomendado }}</div>
+      <div class="npk-label">kg N/ha</div>
+    </div>
+    <div class="npk-box npk-p">
+      <div class="npk-value">{{ rec.p2o5_recomendado }}</div>
+      <div class="npk-label">kg P₂O₅/ha</div>
+    </div>
+    <div class="npk-box npk-k">
+      <div class="npk-value">{{ rec.k2o_recomendado }}</div>
+      <div class="npk-label">kg K₂O/ha</div>
+    </div>
+    {% if rec.necessidade_calcario and rec.necessidade_calcario > 0 %}
+    <div class="npk-box npk-ca">
+      <div class="npk-value">{{ rec.necessidade_calcario }}</div>
+      <div class="npk-label">t/ha Calcário</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Resumo por área total -->
+  <div style="margin-top: 12px; background: #f0fdf4; border-radius: 8px; padding: 8px; font-size: 11px;">
+    <strong>Totais para a área de {{ rec.area_ha }} ha:</strong><br>
+    N: {{ (rec.n_recomendado * rec.area_ha)|round(0)|int }} kg &nbsp;|&nbsp;
+    P₂O₅: {{ (rec.p2o5_recomendado * rec.area_ha)|round(0)|int }} kg &nbsp;|&nbsp;
+    K₂O: {{ (rec.k2o_recomendado * rec.area_ha)|round(0)|int }} kg
+    {% if rec.necessidade_calcario and rec.necessidade_calcario > 0 %}
+    &nbsp;|&nbsp; Calcário: {{ (rec.necessidade_calcario * rec.area_ha)|round(1) }} t
+    {% endif %}
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">🌾 Parcelamento do Nitrogênio em Cobertura</div>
+  <table>
+    <thead>
+      <tr><th>Época</th><th>Estágio</th><th>Dose (kg N/ha)</th><th>%</th></tr>
+    </thead>
+    <tbody>
+      <!-- Parcelamento dinâmico calculado pelo backend -->
+      {% for p in parcelamento %}
+      <tr>
+        <td>{{ loop.index }}ª aplicação</td>
+        <td>{{ p.epoca }}</td>
+        <td>{{ p.dose }}</td>
+        <td>{{ p.pct }}%</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
+    * Base na semeadura: <strong>{{ n_base_semeadura }} kg N/ha</strong> (já incluso no fertilizante de base).
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">🏭 Fertilizantes Comerciais</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Aplicação</th><th>Produto</th><th>Dose (kg/ha)</th>
+        <th>Área (ha)</th><th>Total (kg)</th>
+        {% if rec.custo_estimado %}<th>Custo (R$)</th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Semeadura (Base)</strong></td>
+        <td>{{ rec.fertilizante_base }}</td>
+        <td><strong>{{ rec.dose_base }}</strong></td>
+        <td>{{ rec.area_ha }}</td>
+        <td><strong>{{ (rec.dose_base * rec.area_ha)|round(0)|int }}</strong></td>
+        {% if rec.custo_estimado %}
+        <td>{% if custo_base %}{{ "%.2f"|format(custo_base) }}{% else %}—{% endif %}</td>
+        {% endif %}
+      </tr>
+      <tr>
+        <td><strong>Cobertura</strong></td>
+        <td>{{ rec.fertilizante_cobertura }}</td>
+        <td><strong>{{ rec.dose_cobertura }}</strong></td>
+        <td>{{ rec.area_ha }}</td>
+        <td><strong>{{ (rec.dose_cobertura * rec.area_ha)|round(0)|int }}</strong></td>
+        {% if rec.custo_estimado %}
+        <td>{% if custo_cob %}{{ "%.2f"|format(custo_cob) }}{% else %}—{% endif %}</td>
+        {% endif %}
+      </tr>
+    </tbody>
+  </table>
+
+  {% if rec.custo_estimado %}
+  <div class="alert-box">
+    <strong>💰 Custo Estimado Total de Fertilizantes: R$ {{ "%.2f"|format(rec.custo_estimado) }}</strong><br>
+    <span style="font-size: 10px;">* Custo calculado com base nos preços informados no momento da recomendação.</span>
+  </div>
+  {% endif %}
+</div>
+
+{% if rec.observacoes %}
+<div class="section">
+  <div class="section-title">📝 Observações</div>
+  <p>{{ rec.observacoes }}</p>
+</div>
+{% endif %}
+
+<div class="footer">
+  AgroGest — Sistema de Gestão Agrícola &nbsp;|&nbsp;
+  Recomendações baseadas no Manual de Adubação para o Cerrado (Embrapa) &nbsp;|&nbsp;
+  Consulte sempre um Engenheiro Agrônomo
+</div>
+</body>
+</html>

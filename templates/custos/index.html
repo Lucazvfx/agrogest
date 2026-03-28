@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Custos de Produção{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title"><i class="bi bi-currency-dollar me-2 text-success"></i>Custos de Produção</h1>
+    <p class="page-subtitle">Controle de custos variáveis e fixos por plantio</p>
+</div>
+
+<!-- Totais por categoria -->
+{% if totais %}
+<div class="row g-2 mb-4">
+    {% for t in totais %}
+    <div class="col-6 col-md-3 col-lg-2">
+        <div class="card text-center py-2 px-3">
+            <div class="fw-bold text-success" style="font-size:18px;">R$ {{ "%.0f"|format(t.total) }}</div>
+            <div style="font-size:11px;color:#6b7280;text-transform:uppercase;">{{ t.categoria }}</div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <!-- Formulário -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-plus-circle me-2"></i>Lançar Custo</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('custos.novo') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Plantio *</label>
+                        <select name="plantio_id" class="form-select" required>
+                            <option value="">Selecione...</option>
+                            {% for p in plantios %}
+                            <option value="{{ p.id }}">{{ p.talhao_nome }} — {{ p.safra }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Categoria *</label>
+                        <select name="categoria" class="form-select" required>
+                            {% for cat in ['Sementes','Fertilizantes','Defensivos','Combustível','Mão de Obra','Maquinário','Irrigação','Colheita','Transporte','Armazenagem','Administrativo','Outros'] %}
+                            <option>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição *</label>
+                        <input type="text" name="descricao" class="form-control" required
+                               placeholder="Descrição detalhada">
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">Valor (R$) *</label>
+                            <input type="number" name="valor" class="form-control"
+                                   step="0.01" required placeholder="0.00">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Data</label>
+                            <input type="date" name="data_custo" class="form-control">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3 w-100">
+                        <i class="bi bi-check-lg me-2"></i>Lançar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-table me-2"></i>Lançamentos</div>
+            <div class="card-body p-0">
+                {% if custos %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Data</th>
+                                <th>Talhão/Safra</th>
+                                <th>Categoria</th>
+                                <th>Descrição</th>
+                                <th class="text-end pe-3">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in custos %}
+                            <tr>
+                                <td class="ps-3">{{ c.data_custo or '—' }}</td>
+                                <td style="font-size:12px;">{{ c.talhao_nome }}<br><small class="text-muted">{{ c.safra }}</small></td>
+                                <td><span class="badge bg-secondary">{{ c.categoria }}</span></td>
+                                <td>{{ c.descricao }}</td>
+                                <td class="text-end pe-3 fw-bold text-danger">R$ {{ "%.2f"|format(c.valor) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="4" class="ps-3 fw-bold">TOTAL</td>
+                                <td class="text-end pe-3 fw-bold text-danger">
+                                    R$ {{ "%.2f"|format(custos|sum(attribute='valor')) }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">Nenhum custo lançado.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

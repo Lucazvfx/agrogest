@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Colheitas{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title"><i class="bi bi-basket3 me-2 text-success"></i>Colheitas</h1>
+    <p class="page-subtitle">Registro de produção e produtividade por talhão</p>
+</div>
+
+<div class="row g-4">
+    <!-- Formulário -->
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-plus-circle me-2"></i>Registrar Colheita</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('colheita.nova') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Plantio *</label>
+                        <select name="plantio_id" class="form-select" required>
+                            <option value="">Selecione...</option>
+                            {% for p in plantios %}
+                            <option value="{{ p.id }}" data-area="{{ p.area_ha }}">
+                                {{ p.talhao_nome }} — Safra {{ p.safra }} ({{ p.area_ha }} ha)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">Data Colheita</label>
+                            <input type="date" name="data_colheita" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Área (ha)</label>
+                            <input type="number" name="area_ha" id="areaCol" class="form-control" step="0.01" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Produção Total (kg) *</label>
+                            <input type="number" name="producao_total" id="prodTotal" class="form-control" step="0.1" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Umidade na Colheita (%)</label>
+                            <input type="number" name="umidade_colheita" class="form-control"
+                                   value="13" step="0.1" min="10" max="35">
+                            <div class="form-text">Base: 13% umidade</div>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Preço da Saca (R$)</label>
+                            <input type="number" name="preco_saca" class="form-control" step="0.01">
+                        </div>
+                    </div>
+
+                    <!-- Prévia automática -->
+                    <div id="previa" class="mt-3 p-3" style="background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0;display:none;">
+                        <div class="fw-bold text-success mb-1" style="font-size:13px;">Prévia de Produtividade</div>
+                        <div id="previaValor" class="fs-4 fw-bold text-success">—</div>
+                        <div style="font-size:12px;color:#6b7280;">sc/ha (60 kg)</div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="form-label">Observações</label>
+                        <textarea name="observacoes" class="form-control" rows="2"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3 w-100">
+                        <i class="bi bi-check-lg me-2"></i>Registrar Colheita
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico -->
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-bar-chart me-2"></i>Histórico de Colheitas</div>
+            <div class="card-body p-0">
+                {% if colheitas %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Talhão</th>
+                                <th>Safra</th>
+                                <th>Data</th>
+                                <th>Produção (kg)</th>
+                                <th>Umidade%</th>
+                                <th>sc/ha</th>
+                                <th>Receita</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in colheitas %}
+                            <tr>
+                                <td class="ps-3 fw-bold">{{ c.talhao_nome }}</td>
+                                <td>{{ c.safra }}</td>
+                                <td>{{ c.data_colheita or '—' }}</td>
+                                <td>{{ "{:,.0f}".format(c.producao_corrigida or c.producao_total).replace(",",".") }} kg</td>
+                                <td>{{ c.umidade_colheita }}%</td>
+                                <td>
+                                    <strong class="text-success">{{ "%.1f"|format(c.produtividade_scha or 0) }}</strong>
+                                </td>
+                                <td>{% if c.receita_bruta %}
+                                    <span class="text-success fw-bold">R$ {{ "%.0f"|format(c.receita_bruta) }}</span>
+                                    {% else %}—{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="5" class="ps-3 fw-bold">MÉDIA / TOTAL</td>
+                                <td class="fw-bold text-success">
+                                    {{ "%.1f"|format(colheitas|sum(attribute='produtividade_scha')|float / colheitas|length) }}
+                                </td>
+                                <td class="fw-bold text-success">
+                                    R$ {{ "%.0f"|format(colheitas|sum(attribute='receita_bruta')) }}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-basket fs-2 d-block mb-2"></i>
+                    Nenhuma colheita registrada.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelector('[name=plantio_id]').addEventListener('change', function() {
+    const opt = this.options[this.selectedIndex];
+    if (opt.dataset.area) document.getElementById('areaCol').value = opt.dataset.area;
+});
+
+function calcPrevia() {
+    const prod = parseFloat(document.getElementById('prodTotal').value);
+    const area = parseFloat(document.getElementById('areaCol').value);
+    if (prod && area && area > 0) {
+        const scha = (prod / area / 60).toFixed(1);
+        document.getElementById('previaValor').textContent = scha;
+        document.getElementById('previa').style.display = 'block';
+    }
+}
+document.getElementById('prodTotal').addEventListener('input', calcPrevia);
+document.getElementById('areaCol').addEventListener('input', calcPrevia);
+</script>
+{% endblock %}

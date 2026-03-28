@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Relatório de Safra{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+    <div>
+        <nav aria-label="breadcrumb"><ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('relatorios.index') }}">Relatórios</a></li>
+            <li class="breadcrumb-item active">Safra{{ ' '+safra if safra else 's' }}</li>
+        </ol></nav>
+        <h1 class="page-title">Relatório de Safra{{ ' — '+safra if safra else '' }}</h1>
+    </div>
+    <a href="{{ url_for('relatorios.index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+</div>
+
+{% if dados %}
+<!-- Resumo -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="kpi-card green">
+            <div class="kpi-icon green"><i class="bi bi-basket3"></i></div>
+            <div class="kpi-value">{{ dados|length }}</div>
+            <div class="kpi-label">Talhões Colhidos</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card gold">
+            <div class="kpi-icon gold"><i class="bi bi-bar-chart"></i></div>
+            <div class="kpi-value">{{ "%.1f"|format(dados|sum(attribute='produtividade_scha')|float / dados|length) }}</div>
+            <div class="kpi-label">Média sc/ha</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card blue">
+            <div class="kpi-icon blue"><i class="bi bi-cash-stack"></i></div>
+            <div class="kpi-value">R$ {{ "%.0f"|format(dados|sum(attribute='receita_bruta')) }}</div>
+            <div class="kpi-label">Receita Total</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="kpi-card soil">
+            <div class="kpi-icon soil"><i class="bi bi-graph-down"></i></div>
+            <div class="kpi-value">R$ {{ "%.0f"|format(dados|sum(attribute='total_custo')) }}</div>
+            <div class="kpi-label">Custo Total</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Talhão</th>
+                        <th>Safra</th>
+                        <th>Híbrido</th>
+                        <th>Área (ha)</th>
+                        <th>Produção (kg)</th>
+                        <th>Produt. (sc/ha)</th>
+                        <th>Receita (R$)</th>
+                        <th>Custo (R$)</th>
+                        <th>Resultado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in dados %}
+                    {% set resultado = (d.receita_bruta or 0) - (d.total_custo or 0) %}
+                    <tr>
+                        <td class="ps-3 fw-bold">{{ d.talhao_nome }}</td>
+                        <td>{{ d.safra }}</td>
+                        <td>{{ d.hibrido or '—' }}</td>
+                        <td>{{ d.area_ha }}</td>
+                        <td>{{ "{:,.0f}".format(d.producao_corrigida or 0).replace(",",".") }}</td>
+                        <td><strong class="text-success">{{ "%.1f"|format(d.produtividade_scha or 0) }}</strong></td>
+                        <td>R$ {{ "%.0f"|format(d.receita_bruta or 0) }}</td>
+                        <td>R$ {{ "%.0f"|format(d.total_custo or 0) }}</td>
+                        <td>
+                            <span class="fw-bold {% if resultado >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                R$ {{ "%.0f"|format(resultado) }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <td colspan="4" class="ps-3 fw-bold">TOTAIS</td>
+                        <td>{{ "{:,.0f}".format(dados|sum(attribute='producao_corrigida')|int).replace(",",".") }} kg</td>
+                        <td class="fw-bold text-success">
+                            {{ "%.1f"|format(dados|sum(attribute='produtividade_scha')|float / dados|length) }} sc/ha
+                        </td>
+                        <td>R$ {{ "%.0f"|format(dados|sum(attribute='receita_bruta')) }}</td>
+                        <td>R$ {{ "%.0f"|format(dados|sum(attribute='total_custo')) }}</td>
+                        <td class="fw-bold {% if (dados|sum(attribute='receita_bruta') - dados|sum(attribute='total_custo')) >= 0 %}text-success{% else %}text-danger{% endif %}">
+                            R$ {{ "%.0f"|format(dados|sum(attribute='receita_bruta') - dados|sum(attribute='total_custo')) }}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5 text-muted">
+        <i class="bi bi-search fs-2 d-block mb-2"></i>
+        Nenhum dado encontrado para os filtros selecionados.
+    </div>
+</div>
+{% endif %}
+{% endblock %}

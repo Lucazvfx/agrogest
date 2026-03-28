@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Aplicações de Adubação{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-start">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('plantio.index') }}">Plantios</a></li>
+                <li class="breadcrumb-item active">Adubações</li>
+            </ol>
+        </nav>
+        <h1 class="page-title"><i class="bi bi-droplet-half me-2 text-success"></i>Aplicações de Adubação</h1>
+        <p class="page-subtitle">{{ plantio.talhao_nome }} — Safra {{ plantio.safra }}</p>
+    </div>
+</div>
+
+<!-- Formulário de nova aplicação -->
+<div class="card mb-4">
+    <div class="card-header"><i class="bi bi-plus-circle me-2"></i>Registrar Aplicação</div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Tipo</label>
+                    <select name="tipo" class="form-select" required>
+                        <option value="base">Base (Semeadura)</option>
+                        <option value="cobertura1">1ª Cobertura</option>
+                        <option value="cobertura2">2ª Cobertura</option>
+                        <option value="foliar">Foliar</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Data</label>
+                    <input type="date" name="data_aplicacao" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Fertilizante *</label>
+                    <input type="text" name="fertilizante" class="form-control" required
+                           placeholder="Ex: 04-14-08, Ureia">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Dose (kg/ha) *</label>
+                    <input type="number" name="dose_kgha" class="form-control" step="0.1" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Área (ha) *</label>
+                    <input type="number" name="area_ha" class="form-control" step="0.01"
+                           value="{{ plantio.area_plantada or '' }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Custo (R$/kg)</label>
+                    <input type="number" name="custo_kg" class="form-control" step="0.01">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Observações</label>
+                    <input type="text" name="observacoes" class="form-control">
+                </div>
+            </div>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-2"></i>Registrar Aplicação
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Histórico -->
+<div class="card">
+    <div class="card-header"><i class="bi bi-clock-history me-2"></i>Histórico de Aplicações</div>
+    <div class="card-body p-0">
+        {% if aplicacoes %}
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-3">Data</th>
+                    <th>Tipo</th>
+                    <th>Fertilizante</th>
+                    <th>Dose (kg/ha)</th>
+                    <th>Área (ha)</th>
+                    <th>Total (kg)</th>
+                    <th>Custo (R$)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in aplicacoes %}
+                <tr>
+                    <td class="ps-3">{{ a.data_aplicacao or '—' }}</td>
+                    <td><span class="badge bg-secondary">{{ a.tipo }}</span></td>
+                    <td class="fw-bold">{{ a.fertilizante }}</td>
+                    <td>{{ a.dose_kgha }}</td>
+                    <td>{{ a.area_ha }}</td>
+                    <td>{{ "%.0f"|format(a.dose_kgha * a.area_ha) }}</td>
+                    <td>{% if a.custo_kg %}R$ {{ "%.0f"|format(a.custo_kg * a.dose_kgha * a.area_ha) }}{% else %}—{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-4 text-muted">Nenhuma aplicação registrada ainda.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
