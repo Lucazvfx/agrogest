@@ -2,11 +2,13 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}AgroGest{% endblock %} | Faculdade </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a3a1f">
+    <title>{% block title %}AgroGest{% endblock %} | Faculdade</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <!-- Fonte alterada para Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -25,18 +27,21 @@
             --shadow:       0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.04);
             --shadow-lg:    0 8px 24px rgba(0,0,0,.10);
             --radius:       12px;
+            --bottom-nav-h: 64px;
         }
 
         * { box-sizing: border-box; }
-        
+
         body {
-            font-family: 'Inter', sans-serif; /* alterado para Inter */
+            font-family: 'Inter', sans-serif;
             background: #f0f4f0;
             color: var(--text-dark);
             min-height: 100vh;
         }
 
-        /* ── SIDEBAR ────────────────────────────── */
+        /* ══════════════════════════════════════════
+           SIDEBAR — apenas desktop (>=992px)
+        ══════════════════════════════════════════ */
         .sidebar {
             width: 260px;
             min-height: 100vh;
@@ -53,17 +58,9 @@
             padding: 24px 20px 20px;
             border-bottom: 1px solid rgba(255,255,255,.08);
             text-decoration: none;
-        }
-        .brand-icon {
-            width: 44px; height: 44px;
-            background: var(--gold);
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px;
-            margin-bottom: 10px;
+            display: block;
         }
         .brand-name {
-            font-family: 'Inter', sans-serif; /* alterado para Inter */
             font-weight: 800;
             font-size: 20px;
             color: #fff;
@@ -77,9 +74,7 @@
             margin-top: 2px;
         }
 
-        .nav-section {
-            padding: 16px 12px 4px;
-        }
+        .nav-section { padding: 16px 12px 4px; }
         .nav-section-label {
             font-size: 10px;
             font-weight: 600;
@@ -89,7 +84,7 @@
             padding: 0 8px;
             margin-bottom: 4px;
         }
-        .nav-link {
+        .sidebar .nav-link {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -101,15 +96,9 @@
             text-decoration: none;
             transition: all .15s;
         }
-        .nav-link:hover, .nav-link.active {
-            background: rgba(255,255,255,.1);
-            color: #fff;
-        }
-        .nav-link.active {
-            background: var(--green-bright);
-            color: #fff;
-        }
-        .nav-link i { font-size: 16px; width: 20px; text-align: center; }
+        .sidebar .nav-link:hover { background: rgba(255,255,255,.1); color: #fff; }
+        .sidebar .nav-link.active { background: var(--green-bright); color: #fff; }
+        .sidebar .nav-link i { font-size: 16px; width: 20px; text-align: center; }
 
         .sidebar-footer {
             margin-top: auto;
@@ -120,30 +109,95 @@
             text-align: center;
         }
 
-        /* ── MAIN CONTENT ───────────────────────── */
+        /* ══════════════════════════════════════════
+           MAIN CONTENT
+        ══════════════════════════════════════════ */
         .main-wrapper {
             margin-left: 260px;
             padding: 28px;
             min-height: 100vh;
         }
 
-        .page-header {
-            margin-bottom: 24px;
-        }
         .page-title {
-            font-family: 'Inter', sans-serif; /* alterado para Inter */
             font-weight: 700;
             font-size: 26px;
             color: var(--text-dark);
             margin: 0;
         }
-        .page-subtitle {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-top: 2px;
+        .page-subtitle { color: var(--text-muted); font-size: 14px; margin-top: 2px; }
+
+        /* ══════════════════════════════════════════
+           BOTTOM NAVBAR — mobile e tablet (<992px)
+        ══════════════════════════════════════════ */
+        .bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            z-index: 1050;
+            background: var(--green-deep);
+            border-top: 1px solid rgba(255,255,255,.10);
+            box-shadow: 0 -4px 24px rgba(0,0,0,.22);
+            /* iOS safe area (home indicator) */
+            padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
-        /* ── CARDS ──────────────────────────────── */
+        .bottom-nav-inner {
+            display: flex;
+            align-items: stretch;
+            height: var(--bottom-nav-h);
+        }
+
+        .bottom-nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            color: rgba(255,255,255,.45);
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: .02em;
+            position: relative;
+            padding: 6px 4px;
+            -webkit-tap-highlight-color: transparent;
+            transition: color .18s;
+            user-select: none;
+        }
+
+        .bottom-nav-item i {
+            font-size: 22px;
+            line-height: 1;
+            transition: transform .22s cubic-bezier(.34,1.56,.64,1),
+                        color .18s;
+        }
+
+        /* Barra indicadora no topo do item ativo */
+        .bottom-nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%) scaleX(0);
+            width: 28px; height: 3px;
+            background: var(--gold);
+            border-radius: 0 0 4px 4px;
+            transition: transform .22s cubic-bezier(.34,1.56,.64,1);
+        }
+
+        .bottom-nav-item.active { color: #fff; }
+        .bottom-nav-item.active::before { transform: translateX(-50%) scaleX(1); }
+        .bottom-nav-item.active i {
+            transform: translateY(-3px);
+            color: var(--gold);
+        }
+
+        /* Ripple ao tocar */
+        .bottom-nav-item:active { opacity: .75; }
+
+        /* ══════════════════════════════════════════
+           CARDS / KPI / TABLE
+        ══════════════════════════════════════════ */
         .card {
             background: #fff;
             border: 1px solid var(--border);
@@ -154,12 +208,10 @@
             background: transparent;
             border-bottom: 1px solid var(--border);
             padding: 16px 20px;
-            font-family: 'Inter', sans-serif; /* alterado para Inter */
             font-weight: 600;
             font-size: 15px;
         }
 
-        /* ── KPI CARDS ──────────────────────────── */
         .kpi-card {
             background: #fff;
             border: 1px solid var(--border);
@@ -193,7 +245,6 @@
         .kpi-icon.blue   { background: #dbeafe; color: #1d4ed8; }
 
         .kpi-value {
-            font-family: 'Inter', sans-serif; /* alterado para Inter */
             font-weight: 700;
             font-size: 28px;
             line-height: 1;
@@ -207,7 +258,6 @@
             letter-spacing: .04em;
         }
 
-        /* ── TABLES ─────────────────────────────── */
         .table { font-size: 14px; }
         .table th {
             font-weight: 600;
@@ -221,44 +271,19 @@
         .table td { vertical-align: middle; border-color: var(--border); }
         .table-hover tbody tr:hover { background: #f9fafb; }
 
-        /* ── BADGES ─────────────────────────────── */
         .badge-muito-baixo  { background: #fee2e2; color: #991b1b; }
         .badge-baixo        { background: #fef3c7; color: #92400e; }
         .badge-medio        { background: #dbeafe; color: #1e40af; }
         .badge-adequado     { background: #dcfce7; color: #166534; }
         .badge-alto         { background: #d1fae5; color: #065f46; }
 
-        /* ── BUTTONS ────────────────────────────── */
-        .btn-primary {
-            background: var(--green-mid);
-            border-color: var(--green-mid);
-            font-weight: 500;
-        }
-        .btn-primary:hover {
-            background: var(--green-deep);
-            border-color: var(--green-deep);
-        }
-        .btn-outline-primary {
-            color: var(--green-mid);
-            border-color: var(--green-mid);
-        }
-        .btn-outline-primary:hover {
-            background: var(--green-mid);
-            border-color: var(--green-mid);
-        }
-        .btn-gold {
-            background: var(--gold);
-            border-color: var(--gold);
-            color: var(--green-deep);
-            font-weight: 600;
-        }
-        .btn-gold:hover {
-            background: #d4a73a;
-            border-color: #d4a73a;
-            color: var(--green-deep);
-        }
+        .btn-primary { background: var(--green-mid); border-color: var(--green-mid); font-weight: 500; }
+        .btn-primary:hover { background: var(--green-deep); border-color: var(--green-deep); }
+        .btn-outline-primary { color: var(--green-mid); border-color: var(--green-mid); }
+        .btn-outline-primary:hover { background: var(--green-mid); border-color: var(--green-mid); }
+        .btn-gold { background: var(--gold); border-color: var(--gold); color: var(--green-deep); font-weight: 600; }
+        .btn-gold:hover { background: #d4a73a; border-color: #d4a73a; color: var(--green-deep); }
 
-        /* ── FORMS ──────────────────────────────── */
         .form-label { font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 4px; }
         .form-control, .form-select {
             border-radius: 8px;
@@ -271,54 +296,61 @@
             box-shadow: 0 0 0 3px rgba(61,158,72,.12);
         }
 
-        /* ── ALERTS ─────────────────────────────── */
         .alert { border-radius: var(--radius); border: none; font-size: 14px; }
         .alert-success { background: #dcfce7; color: #166534; }
         .alert-warning { background: #fef9c3; color: #92400e; }
         .alert-danger  { background: #fee2e2; color: #991b1b; }
         .alert-info    { background: #dbeafe; color: #1e40af; }
 
-        /* ── RECOMENDAÇÃO CARDS ──────────────────── */
-        .rec-card {
-            background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
-            border-radius: var(--radius);
-            padding: 20px;
-            color: #fff;
-        }
-        .rec-value {
-            font-family: 'Inter', sans-serif; /* alterado para Inter */
-            font-size: 36px;
-            font-weight: 800;
-            line-height: 1;
-        }
-        .rec-unit { font-size: 14px; opacity: .8; }
+        .rec-card { background: linear-gradient(135deg, var(--green-deep), var(--green-mid)); border-radius: var(--radius); padding: 20px; color: #fff; }
+        .rec-value { font-size: 36px; font-weight: 800; line-height: 1; }
+        .rec-unit  { font-size: 14px; opacity: .8; }
         .rec-label { font-size: 12px; opacity: .7; margin-top: 4px; text-transform: uppercase; }
-
         .rec-n  { background: linear-gradient(135deg, #1e3a5f, #2563eb); }
         .rec-p  { background: linear-gradient(135deg, #3d1a00, #b45309); }
         .rec-k  { background: linear-gradient(135deg, #4a1942, #7c3aed); }
         .rec-ca { background: linear-gradient(135deg, #1a3a2a, #059669); }
 
-        /* ── MISC ───────────────────────────────── */
         .breadcrumb { font-size: 13px; }
         .section-divider { border-top: 1px solid var(--border); margin: 24px 0; }
-        
-        .corn-bg {
-            background-image: radial-gradient(circle at 80% 50%, rgba(61,158,72,.06) 0%, transparent 60%);
+        .corn-bg { background-image: radial-gradient(circle at 80% 50%, rgba(61,158,72,.06) 0%, transparent 60%); }
+
+        /* ══════════════════════════════════════════
+           BREAKPOINTS
+        ══════════════════════════════════════════ */
+
+        /* Tablet e mobile: oculta sidebar, exibe bottom nav */
+        @media (max-width: 991.98px) {
+            .sidebar { display: none !important; }
+
+            .main-wrapper {
+                margin-left: 0;
+                padding: 16px 14px;
+                /* Espaço para a navbar inferior + safe area iOS */
+                padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 12px);
+            }
+
+            .bottom-nav { display: block; }
+
+            .kpi-value  { font-size: 22px; }
+            .page-title { font-size: 20px; }
         }
 
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .main-wrapper { margin-left: 0; padding: 16px; }
+        /* Telas muito pequenas (iPhone SE, 320px):
+           esconde labels de texto, amplia ícones */
+        @media (max-width: 374px) {
+            .bottom-nav-item span { display: none; }
+            .bottom-nav-item i    { font-size: 24px; }
+            :root { --bottom-nav-h: 56px; }
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-<!-- SIDEBAR -->
+<!-- ══ SIDEBAR (desktop ≥ 992px) ═════════════════════════════════════════ -->
 <nav class="sidebar">
-    <a class="sidebar-brand d-block" href="{{ url_for('dashboard.index') }}">
+    <a class="sidebar-brand" href="{{ url_for('adubacao.analises') }}">
         <div class="brand-name">AgroGest</div>
         <div class="brand-sub">Criado por Lucas</div>
     </a>
@@ -363,11 +395,14 @@
            href="{{ url_for('defensivos.index') }}">
             <i class="bi bi-shield-check"></i> Defensivos
         </a>
-        </a>
     </div>
 
     <div class="nav-section">
         <div class="nav-section-label">Análises</div>
+        <a class="nav-link {% if 'custos' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('custos.index') }}">
+            <i class="bi bi-cash-stack"></i> Custos
+        </a>
         <a class="nav-link {% if 'relatorios' in request.endpoint %}active{% endif %}"
            href="{{ url_for('relatorios.index') }}">
             <i class="bi bi-file-earmark-bar-graph"></i> Relatórios
@@ -375,12 +410,11 @@
     </div>
 
     <div class="sidebar-footer">
-         AgroGest<br>
-        Projeto faculdade
+        AgroGest &mdash; Projeto faculdade
     </div>
 </nav>
 
-<!-- MAIN -->
+<!-- ══ MAIN CONTENT ═══════════════════════════════════════════════════════ -->
 <main class="main-wrapper">
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
@@ -395,6 +429,40 @@
 
     {% block content %}{% endblock %}
 </main>
+
+<!-- ══ BOTTOM NAVBAR (mobile / tablet < 992px) ═══════════════════════════ -->
+<nav class="bottom-nav" aria-label="Navegação principal">
+    <div class="bottom-nav-inner">
+
+
+        </a>
+
+        <a class="bottom-nav-item {% if 'talhoes' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('talhoes.index') }}">
+            <i class="bi bi-map"></i>
+            <span>Talhões</span>
+        </a>
+
+        <a class="bottom-nav-item {% if 'plantio' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('plantio.index') }}">
+            <i class="bi bi-flower1"></i>
+            <span>Plantios</span>
+        </a>
+
+        <a class="bottom-nav-item {% if 'colheita' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('colheita.index') }}">
+            <i class="bi bi-basket3"></i>
+            <span>Colheitas</span>
+        </a>
+
+        <a class="bottom-nav-item {% if 'custos' in request.endpoint %}active{% endif %}"
+           href="{{ url_for('custos.index') }}">
+            <i class="bi bi-cash-stack"></i>
+            <span>Custos</span>
+        </a>
+
+    </div>
+</nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>

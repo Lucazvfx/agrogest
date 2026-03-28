@@ -37,11 +37,11 @@ Acesse: **http://localhost:5000**
 ```bash
 python seed.py
 
-### 5. Carregar dados de att
+### 5. Carregar dados de demonstração
 
 ```
 git add .
-git commit -m "Ajuste no sistema do sistema"
+git commit -m "Ajuste no sistema"
 git push origin main
 
 Popula o banco com 4 talhões, análises de solo, plantios de duas safras, colheitas e custos de exemplo.
