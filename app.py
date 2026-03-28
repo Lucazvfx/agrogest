@@ -12,7 +12,9 @@ from modules.relatorios import relatorios_bp
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(Config)
+    return app
+
+app = create_app()
 
     init_db(app)
 
