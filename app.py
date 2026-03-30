@@ -10,6 +10,8 @@ from modules.custos import custos_bp
 from modules.colheita import colheita_bp
 from modules.dashboard import dashboard_bp
 from modules.relatorios import relatorios_bp
+from auth import auth_bp, login_required
+from datetime import timedelta
 
 def create_app():
     app = Flask(__name__)
@@ -25,6 +27,7 @@ def create_app():
     app.register_blueprint(custos_bp, url_prefix='/custos')
     app.register_blueprint(colheita_bp, url_prefix='/colheita')
     app.register_blueprint(relatorios_bp, url_prefix='/relatorios')
+    app.register_blueprint(auth_bp)
 
     return app
 

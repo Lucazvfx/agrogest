@@ -17,7 +17,22 @@
   th { background: #f0fdf4; color: #166534; font-weight: bold; padding: 6px 10px; text-align: left; border: 1px solid #d1fae5; font-size: 11px; }
   td { padding: 6px 10px; border: 1px solid #e5e7eb; vertical-align: top; }
   tr:nth-child(even) td { background: #f9fafb; }
-  
+
+  /* ── Tabela de conversão ── */
+  .conv-table th { font-size: 10px; text-align: center; }
+  .conv-table td { font-size: 11px; text-align: center; }
+  .conv-table td:first-child { text-align: left; font-weight: bold; }
+  .conv-table .group-header td {
+    background: #1a3a1f;
+    color: #fff;
+    font-weight: bold;
+    font-size: 11px;
+    letter-spacing: .04em;
+    padding: 5px 10px;
+  }
+  .conv-highlight { background: #fef9c3 !important; font-weight: bold; color: #92400e; }
+  .conv-note { font-size: 10px; color: #6b7280; margin-top: 4px; font-style: italic; }
+
   .npk-box { display: inline-block; text-align: center; padding: 12px 16px; border-radius: 8px; margin: 4px; min-width: 80px; }
   .npk-n { background: #dbeafe; }
   .npk-p { background: #ffedd5; }
@@ -27,9 +42,7 @@
   .npk-label { font-size: 10px; color: #6b7280; }
   
   .footer { text-align: center; font-size: 10px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 20px; }
-  
   .alert-box { background: #fef9c3; border: 1px solid #fde68a; border-radius: 6px; padding: 10px 14px; margin-top: 10px; font-size: 11px; }
-  
   .logo-row { display: flex; justify-content: space-between; align-items: center; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: bold; background: #dcfce7; color: #166534; }
 </style>
@@ -39,12 +52,11 @@
 <div class="header">
   <div class="logo-row">
     <div>
-      <h1>AgroGest — Recomendação de Adubação</h1>
+      <h1>AgroGest — Adubação e correção seguindo Embrapa Cerrado</h1>
       <p>Talhão: <strong>{{ rec.talhao_nome }}</strong> &nbsp;·&nbsp; Safra: <strong>{{ rec.safra }}</strong> &nbsp;·&nbsp; Área: {{ rec.area_ha }} ha</p>
     </div>
     <div style="text-align:right;font-size:11px;opacity:.8;">
-      Gerado em: {{ rec.criado_em.strftime('%d/%m/%Y %H:%M') }}<br>
-     Apenas estudo
+      Apenas estudo
     </div>
   </div>
 </div>
@@ -58,7 +70,7 @@
       <th>Parâmetro</th><th>Valor</th>
     </tr>
     <tr>
-      <td>pH (CaCl₂)</td><td><strong>{{ analise.ph }}</strong></td>
+      <td>pH (H₂O)</td><td><strong>{{ analise.ph }}</strong></td>
       <td>CTC (cmolc/dm³)</td><td><strong>{{ analise.ctc }}</strong></td>
     </tr>
     <tr>
@@ -143,17 +155,160 @@
   {% endif %}
 </div>
 
+<!-- ══════════════════════════════════════════════════════════
+     TABELA DE CONVERSÃO PARA PRODUTOS COMERCIAIS
+     Fórmula: kg produto/ha = kg nutriente/ha ÷ teor do produto
+════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-title">Conversão para Produtos Comerciais (kg/ha)</div>
+
+  {# Macro que calcula e formata a conversão, evitando divisão por zero #}
+  {% macro conv(nutriente_kg, teor) %}
+    {% if nutriente_kg and nutriente_kg > 0 and teor > 0 %}
+      {{ "%.1f"|format(nutriente_kg / teor) }}
+    {% else %}—{% endif %}
+  {% endmacro %}
+
+  {# Atalhos para os nutrientes recomendados #}
+  {% set n   = rec.n_recomendado    | float %}
+  {% set p   = rec.p2o5_recomendado | float %}
+  {% set k   = rec.k2o_recomendado  | float %}
+  {% set area = rec.area_ha         | float %}
+
+  <table class="conv-table">
+    <tr>
+      <th style="width:34%">Produto Comercial</th>
+      <th>Teor ativo</th>
+      <th>kg produto/ha</th>
+      <th>Total na área ({{ area }} ha)</th>
+      <th>Observação</th>
+    </tr>
+
+    <!-- ── NITROGÊNIO ── -->
+    <tr class="group-header"><td colspan="5">NITROGÊNIO — Recomendado: {{ n|int }} kg N/ha</td></tr>
+    <tr>
+      <td>Ureia</td>
+      <td>45% N</td>
+      <td class="conv-highlight">{{ conv(n, 0.45) }}</td>
+      <td>{{ "%.0f"|format(n / 0.45 * area) if n > 0 else '—' }}</td>
+      <td>Incorporar ou aplicar com chuva</td>
+    </tr>
+    <tr>
+      <td>Sulfato de Amônio</td>
+      <td>20% N</td>
+      <td>{{ conv(n, 0.20) }}</td>
+      <td>{{ "%.0f"|format(n / 0.20 * area) if n > 0 else '—' }}</td>
+      <td>Menor volatilização; fornece S</td>
+    </tr>
+    <tr>
+      <td>Nitrato de Amônio</td>
+      <td>32% N</td>
+      <td>{{ conv(n, 0.32) }}</td>
+      <td>{{ "%.0f"|format(n / 0.32 * area) if n > 0 else '—' }}</td>
+      <td>Boa eficiência em cobertura</td>
+    </tr>
+    <tr>
+      <td>Nitrato de Cálcio (15,5% N)</td>
+      <td>15,5% N</td>
+      <td>{{ conv(n, 0.155) }}</td>
+      <td>{{ "%.0f"|format(n / 0.155 * area) if n > 0 else '—' }}</td>
+      <td>Fornece Ca; solúvel em fertirrigação</td>
+    </tr>
+    <tr>
+      <td>DAP (18-46-00)</td>
+      <td>18% N</td>
+      <td>{{ conv(n, 0.18) }}</td>
+      <td>{{ "%.0f"|format(n / 0.18 * area) if n > 0 else '—' }}</td>
+      <td>Uso na semeadura (contém P)</td>
+    </tr>
+
+    <!-- ── FÓSFORO ── -->
+    <tr class="group-header"><td colspan="5">FÓSFORO — Recomendado: {{ p|int }} kg P₂O₅/ha</td></tr>
+    <tr>
+      <td>Superfosfato Simples (SFS)</td>
+      <td>18% P₂O₅</td>
+      <td>{{ conv(p, 0.18) }}</td>
+      <td>{{ "%.0f"|format(p / 0.18 * area) if p > 0 else '—' }}</td>
+      <td>Fornece Ca e S; menor custo/ha</td>
+    </tr>
+    <tr>
+      <td>Superfosfato Triplo (SFT)</td>
+      <td>46% P₂O₅</td>
+      <td class="conv-highlight">{{ conv(p, 0.46) }}</td>
+      <td>{{ "%.0f"|format(p / 0.46 * area) if p > 0 else '—' }}</td>
+      <td>Mais concentrado; menor dose</td>
+    </tr>
+    <tr>
+      <td>MAP (12-52-00)</td>
+      <td>52% P₂O₅</td>
+      <td>{{ conv(p, 0.52) }}</td>
+      <td>{{ "%.0f"|format(p / 0.52 * area) if p > 0 else '—' }}</td>
+      <td>Alta solubilidade; recomendado sulco</td>
+    </tr>
+    <tr>
+      <td>DAP (18-46-00)</td>
+      <td>46% P₂O₅</td>
+      <td>{{ conv(p, 0.46) }}</td>
+      <td>{{ "%.0f"|format(p / 0.46 * area) if p > 0 else '—' }}</td>
+      <td>Fornece N + P na semeadura</td>
+    </tr>
+    <tr>
+      <td>Termofosfato (17% P₂O₅)</td>
+      <td>17% P₂O₅</td>
+      <td>{{ conv(p, 0.17) }}</td>
+      <td>{{ "%.0f"|format(p / 0.17 * area) if p > 0 else '—' }}</td>
+      <td>Reage em solos ácidos; Ca e Mg</td>
+    </tr>
+
+    <!-- ── POTÁSSIO ── -->
+    <tr class="group-header"><td colspan="5">POTÁSSIO — Recomendado: {{ k|int }} kg K₂O/ha</td></tr>
+    <tr>
+      <td>KCl (Cloreto de Potássio)</td>
+      <td>60% K₂O</td>
+      <td class="conv-highlight">{{ conv(k, 0.60) }}</td>
+      <td>{{ "%.0f"|format(k / 0.60 * area) if k > 0 else '—' }}</td>
+      <td>Produto mais comum; menor custo</td>
+    </tr>
+    <tr>
+      <td>Sulfato de Potássio (SOP)</td>
+      <td>50% K₂O</td>
+      <td>{{ conv(k, 0.50) }}</td>
+      <td>{{ "%.0f"|format(k / 0.50 * area) if k > 0 else '—' }}</td>
+      <td>Isento de cloro; fornece S</td>
+    </tr>
+    <tr>
+      <td>K-Mag / Kieserita</td>
+      <td>22% K₂O</td>
+      <td>{{ conv(k, 0.22) }}</td>
+      <td>{{ "%.0f"|format(k / 0.22 * area) if k > 0 else '—' }}</td>
+      <td>Fornece K + Mg + S</td>
+    </tr>
+    <tr>
+      <td>Nitrato de Potássio</td>
+      <td>44% K₂O</td>
+      <td>{{ conv(k, 0.44) }}</td>
+      <td>{{ "%.0f"|format(k / 0.44 * area) if k > 0 else '—' }}</td>
+      <td>Solúvel; ideal fertirrigação</td>
+    </tr>
+  </table>
+
+  <p class="conv-note">
+    <br>
+    Consulte sempre um Engenheiro Agrônomo.
+  </p>
+</div>
+
 {% if rec.observacoes %}
 <div class="section">
-  <div class="section-title">📝 Observações</div>
+  <div class="section-title">Observações</div>
   <p>{{ rec.observacoes }}</p>
 </div>
 {% endif %}
 
 <div class="footer">
-  AgroMilho — Sistema de Gestão Agrícola &nbsp;|&nbsp;
-  Recomendações baseadas no Manual de Adubação para o Cerrado (Embrapa) &nbsp;|&nbsp;
-  Consulte sempre um Engenheiro Agrônomo
+  AgroGest &nbsp;|&nbsp;
+  Tabelas retiradas do Embrapa Cerrado &nbsp;|&nbsp;
+
 </div>
 </body>
 </html>

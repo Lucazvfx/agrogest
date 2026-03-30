@@ -25,17 +25,52 @@ def init_db(app):
         db = get_db(app)
         db.executescript(SCHEMA)
         db.commit()
+        _criar_admin_padrao(db)
     app.teardown_appcontext(close_db)
 
+def _criar_admin_padrao(db):
+    """Cria o usuário admin padrão se ainda não existir."""
+    import hashlib, os
+    existe = db.execute("SELECT id FROM usuarios WHERE email = 'admin@agrogest.com'").fetchone()
+    if not existe:
+        salt = os.urandom(16).hex()
+        h = hashlib.sha256(f"{salt}admin123".encode()).hexdigest()
+        senha_hash = f"{salt}${h}"
+        db.execute("""
+            INSERT INTO usuarios (nome, email, senha_hash, tipo)
+            VALUES ('Administrador', 'admin@agrogest.com', ?, 'admin')
+        """, (senha_hash,))
+        db.commit()
+        print("✅ Usuário admin criado: admin@agrogest.com / senha: admin123")
+        print("   ⚠️  Troque a senha após o primeiro login!")
+
 SCHEMA = """
+-- ══════════════════════════════════════════
+--  USUÁRIOS  (novo)
+-- ══════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    senha_hash TEXT NOT NULL,
+    tipo TEXT DEFAULT 'produtor',   -- 'admin' ou 'produtor'
+    ativo INTEGER DEFAULT 1,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ══════════════════════════════════════════
+--  TABELAS ORIGINAIS + coluna usuario_id
+-- ══════════════════════════════════════════
 CREATE TABLE IF NOT EXISTS talhoes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL,            -- ← isolamento por usuário
     nome TEXT NOT NULL,
     area_ha REAL NOT NULL,
     localizacao TEXT,
     tipo_solo TEXT,
     observacoes TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
 
 CREATE TABLE IF NOT EXISTS analises_solo (
@@ -44,17 +79,10 @@ CREATE TABLE IF NOT EXISTS analises_solo (
     data_coleta DATE NOT NULL,
     safra TEXT,
     profundidade TEXT DEFAULT '0-20 cm',
-    ph REAL,
-    fosforo REAL,
-    potassio REAL,
-    calcio REAL,
-    magnesio REAL,
-    aluminio REAL,
-    h_al REAL,
-    ctc REAL,
-    saturacao_bases REAL,
-    teor_argila REAL,
-    materia_organica REAL,
+    ph REAL, fosforo REAL, potassio REAL,
+    calcio REAL, magnesio REAL, aluminio REAL,
+    h_al REAL, ctc REAL, saturacao_bases REAL,
+    teor_argila REAL, materia_organica REAL,
     observacoes TEXT,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (talhao_id) REFERENCES talhoes(id)
@@ -66,16 +94,11 @@ CREATE TABLE IF NOT EXISTS recomendacoes_adubacao (
     analise_solo_id INTEGER,
     safra TEXT NOT NULL,
     meta_produtividade REAL,
-    n_recomendado REAL,
-    p2o5_recomendado REAL,
-    k2o_recomendado REAL,
-    necessidade_calcario REAL,
-    fertilizante_base TEXT,
-    dose_base REAL,
-    fertilizante_cobertura TEXT,
-    dose_cobertura REAL,
-    custo_estimado REAL,
-    observacoes TEXT,
+    n_recomendado REAL, p2o5_recomendado REAL,
+    k2o_recomendado REAL, necessidade_calcario REAL,
+    fertilizante_base TEXT, dose_base REAL,
+    fertilizante_cobertura TEXT, dose_cobertura REAL,
+    custo_estimado REAL, observacoes TEXT,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (talhao_id) REFERENCES talhoes(id),
     FOREIGN KEY (analise_solo_id) REFERENCES analises_solo(id)
@@ -103,8 +126,7 @@ CREATE TABLE IF NOT EXISTS aplicacoes_adubacao (
     fertilizante TEXT NOT NULL,
     dose_kgha REAL NOT NULL,
     area_ha REAL NOT NULL,
-    custo_kg REAL,
-    observacoes TEXT,
+    custo_kg REAL, observacoes TEXT,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (plantio_id) REFERENCES plantios(id)
 );
@@ -114,12 +136,8 @@ CREATE TABLE IF NOT EXISTS aplicacoes_defensivos (
     plantio_id INTEGER NOT NULL,
     data_aplicacao DATE,
     produto TEXT NOT NULL,
-    tipo TEXT,
-    dose_lha REAL,
-    area_ha REAL,
-    custo_litro REAL,
-    estagio_cultura TEXT,
-    observacoes TEXT,
+    tipo TEXT, dose_lha REAL, area_ha REAL,
+    custo_litro REAL, estagio_cultura TEXT, observacoes TEXT,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (plantio_id) REFERENCES plantios(id)
 );
@@ -130,8 +148,7 @@ CREATE TABLE IF NOT EXISTS custos (
     categoria TEXT NOT NULL,
     descricao TEXT NOT NULL,
     valor REAL NOT NULL,
-    data_custo DATE,
-    observacoes TEXT,
+    data_custo DATE, observacoes TEXT,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (plantio_id) REFERENCES plantios(id)
 );
@@ -140,25 +157,22 @@ CREATE TABLE IF NOT EXISTS colheitas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     plantio_id INTEGER NOT NULL,
     data_colheita DATE,
-    producao_total REAL,
-    umidade_colheita REAL,
-    producao_corrigida REAL,
-    produtividade_kgha REAL,
-    produtividade_scha REAL,
-    preco_saca REAL,
-    receita_bruta REAL,
-    observacoes TEXT,
+    producao_total REAL, umidade_colheita REAL,
+    producao_corrigida REAL, produtividade_kgha REAL,
+    produtividade_scha REAL, preco_saca REAL,
+    receita_bruta REAL, observacoes TEXT,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (plantio_id) REFERENCES plantios(id)
 );
 
 CREATE TABLE IF NOT EXISTS estoque_fertilizantes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL,            -- ← isolamento por usuário
     produto TEXT NOT NULL,
     tipo TEXT,
     quantidade_kg REAL DEFAULT 0,
-    preco_kg REAL,
-    fornecedor TEXT,
-    data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    preco_kg REAL, fornecedor TEXT,
+    data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
 """

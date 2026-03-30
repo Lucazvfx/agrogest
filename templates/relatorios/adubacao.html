@@ -57,7 +57,7 @@
 
 {% if analise %}
 <div class="section">
-  <div class="section-title">📋 Análise de Solo</div>
+  <div class="section-title">Análise de Solo</div>
   <div class="interpretacao-grid">
     <div class="interpretacao-item">
       <div class="interpretacao-label">pH</div>
@@ -117,7 +117,7 @@
 {% endif %}
 
 <div class="section">
-  <div class="section-title">🌽 Recomendação de Nutrientes</div>
+  <div class="section-title">Recomendação de Nutrientes</div>
   <p>Meta de produtividade: <strong>{{ rec.meta_produtividade }} t/ha</strong></p>
   <div>
     <div class="npk-box npk-n">
@@ -153,7 +153,7 @@
 </div>
 
 <div class="section">
-  <div class="section-title">🌾 Parcelamento do Nitrogênio em Cobertura</div>
+  <div class="section-title"> Parcelamento do Nitrogênio em Cobertura</div>
   <table>
     <thead>
       <tr><th>Época</th><th>Estágio</th><th>Dose (kg N/ha)</th><th>%</th></tr>
@@ -176,7 +176,7 @@
 </div>
 
 <div class="section">
-  <div class="section-title">🏭 Fertilizantes Comerciais</div>
+  <div class="section-title">Fertilizantes Comerciais</div>
   <table>
     <thead>
       <tr>
@@ -211,7 +211,7 @@
 
   {% if rec.custo_estimado %}
   <div class="alert-box">
-    <strong>💰 Custo Estimado Total de Fertilizantes: R$ {{ "%.2f"|format(rec.custo_estimado) }}</strong><br>
+    <strong>Custo Estimado Total de Fertilizantes: R$ {{ "%.2f"|format(rec.custo_estimado) }}</strong><br>
     <span style="font-size: 10px;">* Custo calculado com base nos preços informados no momento da recomendação.</span>
   </div>
   {% endif %}
@@ -219,15 +219,15 @@
 
 {% if rec.observacoes %}
 <div class="section">
-  <div class="section-title">📝 Observações</div>
+  <div class="section-title">Observações</div>
   <p>{{ rec.observacoes }}</p>
 </div>
 {% endif %}
 
 <div class="footer">
-  AgroGest — Sistema de Gestão Agrícola &nbsp;|&nbsp;
+  AgroGest  &nbsp;|&nbsp;
   Recomendações baseadas no Manual de Adubação para o Cerrado (Embrapa) &nbsp;|&nbsp;
-  Consulte sempre um Engenheiro Agrônomo
+ 
 </div>
 </body>
 </html>

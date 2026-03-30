@@ -218,7 +218,7 @@ def _parcelamento_n(n_cob, teor_argila):
 #  CALAGEM
 # ══════════════════════════════════════════════════════════════════
 
-def calcular_calagem(v1, ctc, v2=50.0, prnt=100.0):
+def calcular_calagem(v1, ctc, v2=70.0, prnt=100.0):
     if v1 >= v2:
         return 0.0
     return round(((v2-v1)*ctc/100.0)*(100.0/prnt), 2)

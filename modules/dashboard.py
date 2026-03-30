@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template
 from database import get_db
+from auth import login_required
+from flask import session
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
